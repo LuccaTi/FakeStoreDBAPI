@@ -8,8 +8,9 @@ namespace FakeStoreDBAPI.Host.Services.Interfaces
     {
         public Task<IEnumerable<AddressDto>> GetAllAsync();
         public Task<AddressDto?> GetByIdAsync(long id);
-        public Task<AddressDto> PostAsync(CreateAddressDto address);
-        public Task PatchAsync(long id, UpdateAddressDto address);
+        public Task<AddressDto> PostAsync(CreateAddressDto addressDto);
+        public Task PatchAsync(long id, UpdateAddressDto addressDto);
         public Task DeleteAsync(long id);
+        public Task AddressExistsAsync(long id);
     }
 }

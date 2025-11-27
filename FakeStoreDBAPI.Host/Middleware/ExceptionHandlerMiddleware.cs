@@ -34,6 +34,12 @@ namespace FakeStoreDBAPI.Host.Middleware
                     message = notFoundException.Message;
                 }
 
+                if (ex is InvalidIdException invalidIdException)
+                {
+                    statusCode = HttpStatusCode.BadRequest;
+                    message = invalidIdException.Message;
+                }
+
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = (int)statusCode;
 

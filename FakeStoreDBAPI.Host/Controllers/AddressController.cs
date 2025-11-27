@@ -26,13 +26,14 @@ namespace FakeStoreDBAPI.Host.Controllers
         public async Task<IActionResult> GetByIdAsync([FromRoute] long id)
         {
             var address = await _addressService.GetByIdAsync(id);
-
-            if (address == null)
-            {
-                return NotFound();
-            }
-
             return Ok(address);
+        }
+
+        [HttpHead("{id}/address-exists")]
+        public async Task<IActionResult> ExistsAsync([FromRoute] long id)
+        {
+            await _addressService.AddressExistsAsync(id);
+            return NoContent();
         }
 
         [HttpPost]

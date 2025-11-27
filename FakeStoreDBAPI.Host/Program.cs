@@ -27,9 +27,7 @@ namespace FakeStoreDBAPI.Host
                 retainedFileCountLimit: null,
                 shared: true);
 
-            // Writes in the stdout (standard output) of the environment
             Log.Logger = loggerConfiguration.CreateBootstrapLogger();
-
             Log.Information("FakeStoreDBAPI, Starting up");
 
             try
@@ -42,6 +40,7 @@ namespace FakeStoreDBAPI.Host
                 #region DI Container
 
                 builder.Services.AddScoped<IAddressService, AddressService>();
+                builder.Services.AddScoped<ICustomerService, CustomerService>();
                 Log.Information("Services scope added");
 
                 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
