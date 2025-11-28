@@ -29,7 +29,7 @@ namespace FakeStoreDBAPI.Host.Services
             var addresses = await _context.Addresses.ToListAsync();
             if (addresses.Count != 0)
             {
-                _logger.LogDebug($"{_className} - Records obtained");
+                _logger.LogDebug($"{_className} - Records obtained: {addresses.Count}");
             }
             else
             {
@@ -41,8 +41,13 @@ namespace FakeStoreDBAPI.Host.Services
         public async Task<AddressDto?> GetByIdAsync(long id)
         {
             _logger.LogDebug($"{_className} - Attempting to find address ID: {id}");
+            if (id == 0)
+            {
+                throw new InvalidIdException($"Address ID cannot be zero!");
+            }
+
             var address = await _context.Addresses.FindAsync(id);
-            if (address == null)
+            if (address == null || !address.IsActive)
             {
                 throw new NotFoundException($"Address ID: {id} was not found");
             }
@@ -53,7 +58,7 @@ namespace FakeStoreDBAPI.Host.Services
 
         public async Task<AddressDto> PostAsync(CreateAddressDto addressDto)
         {
-            _logger.LogDebug($"{_className} - Attempting to post new address");
+            _logger.LogDebug($"{_className} - Attempting to post address");
             var address = _mapper.Map<Address>(addressDto);
             _context.Addresses.Add(address);
             await _context.SaveChangesAsync();
@@ -66,6 +71,11 @@ namespace FakeStoreDBAPI.Host.Services
         public async Task PatchAsync(long id, UpdateAddressDto addressDto)
         {
             _logger.LogDebug($"{_className} - Attempting to patch address ID: {id}");
+            if (id == 0)
+            {
+                throw new InvalidIdException("Address ID cannot be zero!");
+            }
+
             var addressToUpdate = await _context.Addresses.FindAsync(id);
             if (addressToUpdate == null || !addressToUpdate.IsActive)
             {
@@ -73,14 +83,18 @@ namespace FakeStoreDBAPI.Host.Services
             }
 
             _mapper.Map(addressDto, addressToUpdate);
-            _logger.LogDebug($"{_className} - Patched address ID: {id}");
-
             await _context.SaveChangesAsync();
+            _logger.LogDebug($"{_className} - Patched address ID: {id}");
         }
 
         public async Task DeleteAsync(long id)
         {
             _logger.LogDebug($"{_className} - Attempting to deactivate address ID: {id} and its dependencies");
+            if (id == 0)
+            {
+                throw new InvalidIdException($"Address ID cannot be zero!");
+            }
+
             var addressToDelete = await _context.Addresses.FindAsync(id);
             if (addressToDelete == null || !addressToDelete.IsActive)
             {
@@ -105,9 +119,8 @@ namespace FakeStoreDBAPI.Host.Services
                 _logger.LogDebug($"{_className} - Address didn't have any customers associated with it");
             }
             addressToDelete.IsActive = false;
-
             await _context.SaveChangesAsync();
-            _logger.LogDebug($"{_className} - Address ID: {id} successfully deactivated");
+            _logger.LogDebug($"{_className} - Successfully deactivated address ID: {id} ");
         }
 
         public async Task AddressExistsAsync(long id)
