@@ -40,6 +40,12 @@ namespace FakeStoreDBAPI.Host.Middleware
                     message = invalidIdException.Message;
                 }
 
+                if (ex is ConflictException conflictException)
+                {
+                    statusCode = HttpStatusCode.Conflict;
+                    message = conflictException.Message;
+                }
+
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = (int)statusCode;
 

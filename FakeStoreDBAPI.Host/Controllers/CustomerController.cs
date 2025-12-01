@@ -36,6 +36,13 @@ namespace FakeStoreDBAPI.Host.Controllers
             return Ok(customer);
         }
 
+        [HttpHead("{id}/customer-exists")]
+        public async Task<IActionResult> ExistsAsync([FromRoute] long id)
+        {
+            await _customerService.CustomerExistsAsync(id);
+            return NoContent();
+        }
+
         [HttpPost]
         public async Task<IActionResult> PostAsync([FromBody] CreateCustomerDto customerDto)
         {

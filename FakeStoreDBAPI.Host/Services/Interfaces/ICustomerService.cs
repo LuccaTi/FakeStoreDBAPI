@@ -10,5 +10,6 @@ namespace FakeStoreDBAPI.Host.Services.Interfaces
         public Task<CustomerDto> PostAsync(CreateCustomerDto customerDto);
         public Task PatchAsync(long id, UpdateCustomerDto customerDto);
         public Task DeleteAsync(long id);
+        public Task CustomerExistsAsync(long id);
     }
 }

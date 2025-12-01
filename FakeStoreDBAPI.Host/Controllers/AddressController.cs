@@ -44,9 +44,9 @@ namespace FakeStoreDBAPI.Host.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchAsync([FromRoute] long id, [FromBody] UpdateAddressDto address)
+        public async Task<IActionResult> PatchAsync([FromRoute] long id, [FromBody] UpdateAddressDto addressDto)
         {
-            await _addressService.PatchAsync(id, address);
+            await _addressService.PatchAsync(id, addressDto);
             return NoContent();
         }
 

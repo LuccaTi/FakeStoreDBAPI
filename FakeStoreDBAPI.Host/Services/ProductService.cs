@@ -25,14 +25,14 @@ namespace FakeStoreDBAPI.Host.Services
         public async Task<IEnumerable<ProductDto>> GetAllAsync()
         {
             _logger.LogDebug($"{_className} - Attempting to obtain all product records");
-            var products = await _context.Products.ToListAsync();
+            var products = await _context.Products.Where(o => o.IsActive).ToListAsync();
             if (products.Count != 0)
             {
                 _logger.LogDebug($"{_className} - Records obtained: {products.Count}");
             }
             else
             {
-                _logger.LogDebug($"{_className} - List of records is empty!");
+                _logger.LogWarning($"{_className} - List of records is empty!");
             }
             return _mapper.Map<IEnumerable<ProductDto>>(products);
         }
@@ -40,16 +40,12 @@ namespace FakeStoreDBAPI.Host.Services
         public async Task<ProductDto?> GetByIdAsync(long id)
         {
             _logger.LogDebug($"{_className} - Attempting to find product ID: {id}");
-            if(id == 0)
-            {
+            if (id == 0)
                 throw new InvalidIdException("Product ID cannot be zero!");
-            }
 
             var product = await _context.Products.FindAsync(id);
             if (product == null || !product.IsActive)
-            {
                 throw new NotFoundException($"Product ID: {id} was not found");
-            }
 
             _logger.LogDebug($"{_className} - Found product ID: {id}");
             return _mapper.Map<ProductDto>(product);
@@ -69,16 +65,12 @@ namespace FakeStoreDBAPI.Host.Services
         public async Task PatchAsync(long id, UpdateProductDto productDto)
         {
             _logger.LogDebug($"{_className} - Attempting to patch product ID: {id}");
-            if(id == 0)
-            {
+            if (id == 0)
                 throw new InvalidIdException("Product ID cannot be zero!");
-            }
 
             var productToPatch = await _context.Products.FindAsync(id);
-            if(productToPatch == null || !productToPatch.IsActive)
-            {
+            if (productToPatch == null || !productToPatch.IsActive)
                 throw new NotFoundException($"Product ID: {id} was not found");
-            }
 
             _mapper.Map(productDto, productToPatch);
             await _context.SaveChangesAsync();
@@ -88,16 +80,12 @@ namespace FakeStoreDBAPI.Host.Services
         public async Task DeleteAsync(long id)
         {
             _logger.LogDebug($"{_className} - Attempting to deactivate product ID: {id}");
-            if(id == 0)
-            {
+            if (id == 0)
                 throw new InvalidIdException($"Product ID cannot be zero!");
-            }
-            
+
             var productToDelete = await _context.Products.FindAsync(id);
-            if(productToDelete == null || !productToDelete.IsActive)
-            {
+            if (productToDelete == null || !productToDelete.IsActive)
                 throw new NotFoundException($"Product ID: {id} was not found");
-            }
 
             productToDelete.IsActive = false;
             await _context.SaveChangesAsync();
@@ -108,16 +96,12 @@ namespace FakeStoreDBAPI.Host.Services
         {
             _logger.LogDebug($"{_className} - Checking if product ID: {id} exists");
             if (id == 0)
-            {
                 throw new InvalidIdException("Product ID cannot be zero!");
-            }
 
             bool productExists = false;
             productExists = await _context.Products.AnyAsync(p => p.Id == id && p.IsActive);
             if (!productExists)
-            {
                 throw new NotFoundException($"Product ID: {id} does not exists or is inactive");
-            }
 
             _logger.LogDebug($"{_className} - Product exists and is active");
         }

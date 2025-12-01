@@ -1,8 +1,10 @@
-﻿namespace FakeStoreDBAPI.Host.DTO.Customer
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace FakeStoreDBAPI.Host.DTO.Customer
 {
     public class UpdateCustomerDto
     {
-        public long AddressId { get; set; }
+        public long? AddressId { get; set; }
         public string? Email { get; set; }
         public string? UserName { get; set; }
         public string? Password { get; set; }

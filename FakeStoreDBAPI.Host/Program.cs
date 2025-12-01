@@ -42,6 +42,7 @@ namespace FakeStoreDBAPI.Host
                 builder.Services.AddScoped<IAddressService, AddressService>();
                 builder.Services.AddScoped<ICustomerService, CustomerService>();
                 builder.Services.AddScoped<IProductService, ProductService>();
+                builder.Services.AddScoped<IOrderService, OrderService>();
                 Log.Information("Services scope added");
 
                 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
