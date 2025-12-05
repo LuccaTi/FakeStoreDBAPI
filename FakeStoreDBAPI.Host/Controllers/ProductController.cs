@@ -38,6 +38,13 @@ namespace FakeStoreDBAPI.Host.Controllers
             return NoContent();
         }
 
+        [HttpPost("title-description")]
+        public async Task<IActionResult> GetByTitleDescription([FromBody] TitleDescriptionDto titleDescriptionDto)
+        {
+            var product = await _productService.GetByTitleDescription(titleDescriptionDto);
+            return Ok(product);
+        }
+
         [HttpPost]
         public async Task<IActionResult> PostAsync([FromBody] CreateProductDto productDto)
         {

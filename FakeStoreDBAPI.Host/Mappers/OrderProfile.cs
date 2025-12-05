@@ -12,9 +12,14 @@ namespace FakeStoreDBAPI.Host.Mappers
             CreateMap<Order, OrderDto>();
             CreateMap<Order, OrderWithCustomerDto>();
 
+            CreateMap<Order, OrderWithOrderItemsDto>()
+                .ForMember(dest => dest.OrderItems, opt => opt.MapFrom(src => src.OrderProducts));
+
             CreateMap<UpdateOrderDto, Order>()
                 .ForAllMembers(options => options.Condition((src, dest, srcMember) => srcMember != null));
 
+            CreateMap<CreateOrderItemDto, OrderProduct>();
+            CreateMap<OrderProduct, OrderItemDto>();
         }
     }
 }

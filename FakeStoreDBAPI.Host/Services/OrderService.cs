@@ -43,28 +43,42 @@ namespace FakeStoreDBAPI.Host.Services
 
         public async Task<OrderDto?> GetByGuidAsync(string orderGuid)
         {
-            _logger.LogDebug($"{_className} - Attempting to find order GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - Attempting to find order with GUID: '{orderGuid}'");
 
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
             if (order == null || !order.IsActive)
-                throw new NotFoundException($"Order GUID: '{orderGuid}' was not found");
+                throw new NotFoundException($"Order with GUID: '{orderGuid}' was not found");
 
-            _logger.LogDebug($"{_className} - Found order GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - Found order with GUID: '{orderGuid}'");
             return _mapper.Map<OrderDto>(order);
         }
 
         public async Task<OrderWithCustomerDto?> GetByGuidWithCustomerAsync(string orderGuid)
         {
-            _logger.LogDebug($"{_className} - Attempting to find order GUID: '{orderGuid}' and return it with customer info");
+            _logger.LogDebug($"{_className} - Attempting to find order with GUID: '{orderGuid}' and return it with customer info");
 
             var order = await _context.Orders
                 .Include(o => o.Customer)
                 .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
             if (order == null || !order.IsActive)
-                throw new NotFoundException($"Order GUID: '{orderGuid}' was not found");
+                throw new NotFoundException($"Order with GUID: '{orderGuid}' was not found");
 
-            _logger.LogDebug($"{_className} - Found order GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - Found order with GUID: '{orderGuid}'");
             return _mapper.Map<OrderWithCustomerDto>(order);
+        }
+
+        public async Task<OrderWithOrderItemsDto?> GetByGuidWithOrderItemsAsync(string orderGuid)
+        {
+            _logger.LogDebug($"{_className} - Attempting to find order with GUID: '{orderGuid}' and return it with it's itens");
+            var order = await _context.Orders
+                .Include(o => o.OrderProducts)
+                .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
+
+            if (order == null || !order.IsActive)
+                throw new NotFoundException($"Order with GUID: '{orderGuid}' was not found");
+
+            _logger.LogDebug($"{_className} - Found order with GUID: '{orderGuid}'");
+            return _mapper.Map<OrderWithOrderItemsDto>(order);
         }
 
         public async Task<OrderDto> PostAsync(CreateOrderDto orderDto)
@@ -75,69 +89,202 @@ namespace FakeStoreDBAPI.Host.Services
             await _customerService.CustomerExistsAsync(orderDto.CustomerId);
 
             var orderExists = false;
-            orderExists = await _context.Orders.AnyAsync(o => o.OrderGuid == orderDto.OrderGuid);
+            orderExists = await _context.Orders.AnyAsync(o => o.OrderGuid == orderDto.OrderGuid && o.IsActive);
             if (orderExists)
-                throw new ConflictException($"Order GUID: '{orderDto.OrderGuid}' already exists");
+                throw new ConflictException($"Order with GUID: '{orderDto.OrderGuid}' already exists");
+
+            if (orderDto.OrderItems == null || orderDto.OrderItems.Count == 0)
+                throw new InvalidResourceException($"Order list of products is empty!");
+
+            await ValidateOrderItens(orderDto.OrderItems, order.OrderGuid!);
+            foreach (var item in orderDto.OrderItems)
+            {
+                var orderProduct = _mapper.Map<OrderProduct>(item);
+                order.OrderProducts.Add(orderProduct);
+            }
+
+            await ValidatePrices(order);
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
             var postedOrder = _mapper.Map<OrderDto>(order);
-            _logger.LogDebug($"{_className} - Posted order GUID: '{postedOrder.OrderGuid}'");
+            _logger.LogDebug($"{_className} - Posted order with GUID: '{postedOrder.OrderGuid}'");
             return postedOrder;
         }
 
         public async Task PatchAsync(string orderGuid, UpdateOrderDto orderDto)
         {
-            _logger.LogDebug($"{_className} - Attempting to patch order GUID: '{orderGuid}'");
-            var orderToUpdate = await _context.Orders.FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
-            if (orderToUpdate == null || !orderToUpdate.IsActive)
-                throw new NotFoundException($"Order GUID '{orderGuid}' was not found");
+            _logger.LogDebug($"{_className} - Attempting to patch order with GUID: '{orderGuid}'");
+            var orderToUpdate = await _context.Orders
+                .Include(o => o.OrderProducts.Where(op => op.IsActive))
+                .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
 
-            // Map first because of possible zero value to property orderDto.CustomerId
+            if (orderToUpdate == null || !orderToUpdate.IsActive)
+                throw new NotFoundException($"Order with GUID '{orderGuid}' was not found");
+
+            var originalTotalPrice = orderToUpdate.TotalPrice;
+
             _mapper.Map(orderDto, orderToUpdate);
+
+            if (orderToUpdate.TotalPrice != originalTotalPrice && (orderDto.OrderItems == null || !orderDto.OrderItems.Any()))
+                throw new InvalidResourceException("Order's total price cannot be modified without providing the list of order items for validation!");
 
             if (orderDto.CustomerId.HasValue)
             {
-                _logger.LogDebug($"{_className} - Checking if customer ID: {orderDto.CustomerId.Value} is valid");
+                _logger.LogDebug($"{_className} - Checking if customer with ID: {orderDto.CustomerId.Value} is valid");
                 if (orderDto.CustomerId.Value == 0)
                     throw new InvalidIdException("Customer ID cannot be zero");
 
                 await _customerService.CustomerExistsAsync(orderDto.CustomerId.Value);
 
                 orderToUpdate.CustomerId = orderDto.CustomerId.Value;
-                _logger.LogDebug($"Order GUID: '{orderGuid}' customer ID patched to: {orderDto.CustomerId.Value}");
+                _logger.LogDebug($"Order GUID: '{orderGuid}' patched it's customer ID to: {orderDto.CustomerId.Value}");
             }
             else
             {
                 _context.Entry(orderToUpdate).Property(x => x.CustomerId).IsModified = false;
             }
 
+            if (orderDto.OrderItems != null && orderDto.OrderItems.Count != 0)
+            {
+                await ValidateOrderItens(orderDto.OrderItems, orderGuid);
+
+                var existingItems = orderToUpdate.OrderProducts!.ToDictionary(op => op.ProductId);
+                var dtoItems = orderDto.OrderItems.ToDictionary(item => item.ProductId);
+
+                foreach (var dtoItem in orderDto.OrderItems)
+                {
+                    if (existingItems.TryGetValue(dtoItem.ProductId, out var existingItem))
+                    {
+                        _mapper.Map(dtoItem, existingItem);
+                    }
+                    else
+                    {
+                        var newOrderItem = new OrderProduct()
+                        {
+                            ProductId = dtoItem.ProductId,
+                            Quantity = dtoItem.Quantity,
+                            TotalPrice = dtoItem.TotalPrice
+                        };
+                        orderToUpdate.OrderProducts!.Add(newOrderItem);
+                    }
+                }
+
+                foreach (var existingItem in existingItems.Values)
+                {
+                    if (!dtoItems.ContainsKey(existingItem.ProductId))
+                        existingItem.IsActive = false;
+                }
+            }
+
+            await ValidatePrices(orderToUpdate);
+
             await _context.SaveChangesAsync();
-            _logger.LogDebug($"{_className} - Patched order GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - Patched order with GUID: '{orderGuid}'");
         }
 
         public async Task DeleteAsync(string orderGuid)
         {
-            _logger.LogDebug($"{_className} - Attempting to deactive order GUID: '{orderGuid}'");
-            var orderToDelete = await _context.Orders.FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
+            _logger.LogDebug($"{_className} - Attempting to deactive order with GUID: '{orderGuid}' and it's dependencies (ORDER_PRODUCT)");
+            var orderToDelete = await _context.Orders
+                .Include(o => o.OrderProducts)
+                .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
+
             if (orderToDelete == null || !orderToDelete.IsActive)
                 throw new NotFoundException($"Order GUID: {orderGuid} not found");
 
+            if (orderToDelete.OrderProducts != null && orderToDelete.OrderProducts.Any())
+            {
+                foreach (var dependency in orderToDelete.OrderProducts)
+                {
+                    dependency.IsActive = false;
+                }
+                _logger.LogDebug($"{_className} - Associated dependecies deactivated: {orderToDelete.OrderProducts.Count}");
+            }
+            else
+            {
+                _logger.LogDebug($"{_className} - order didn't have any dependencies associated with it");
+            }
+
             orderToDelete.IsActive = false;
             await _context.SaveChangesAsync();
-            _logger.LogDebug($"{_className} - Successfully deactivated order GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - Successfully deactivated order with GUID: '{orderGuid}'");
         }
 
         public async Task OrderExistsAsync(string orderGuid)
         {
-            _logger.LogDebug($"{_className} - Checking if order GUID: '{orderGuid}' exists and is active");
+            _logger.LogDebug($"{_className} - Checking if order with GUID: '{orderGuid}' exists and is active");
             bool orderExists = false;
             orderExists = await _context.Orders.AnyAsync(o => o.OrderGuid == orderGuid && o.IsActive);
             if (!orderExists)
-                throw new NotFoundException($"Order GUID: '{orderGuid}' does not exists or is inactive");
+                throw new NotFoundException($"Order with GUID: '{orderGuid}' does not exists or is inactive");
 
             _logger.LogDebug($"{_className} - Order exists and is active");
+        }
+
+        public async Task ValidatePrices(Order order)
+        {
+            if (order.OrderProducts != null && order.OrderProducts.Count != 0)
+            {
+                _logger.LogDebug($"Validating if order with GUID: {order.OrderGuid} total price and itens prices are valid");
+
+                var productIds = order.OrderProducts.Select(op => op.ProductId).ToList();
+
+                var productsFromDb = await _context.Products
+                    .Where(p => productIds.Contains(p.Id))
+                    .ToDictionaryAsync(p => p.Id);
+
+                decimal calculatedTotalPrice = 0.0M;
+                foreach (var item in order.OrderProducts)
+                {
+                    if (!item.IsActive)
+                        continue;
+
+                    if (!productsFromDb.TryGetValue(item.ProductId, out var product))
+                        throw new NotFoundException($"Product with ID: {item.ProductId} not found during price validation!");
+
+                    decimal dtoProductPrice = item.TotalPrice / item.Quantity;
+
+                    if (dtoProductPrice != product!.Price)
+                    {
+                        _logger.LogWarning("Product price obtained in HTTP request is different from product price in database!");
+                        throw new InvalidResourceException("Product price obtained in HTTP request is invalid!");
+                    }
+
+                    calculatedTotalPrice += item.TotalPrice;
+                }
+
+                if (calculatedTotalPrice != order.TotalPrice)
+                {
+                    _logger.LogWarning("Order total price obtained in HTTP request is different from order total price in database!");
+                    throw new InvalidResourceException("Order total price obtained in HTTP request is invalid!");
+                }
+            }
+        }
+
+        public async Task ValidateOrderItens(IEnumerable<CreateOrderItemDto> orderItens, string orderGuid)
+        {
+            _logger.LogDebug($"{_className} - Validating items from order with GUID: {orderGuid}");
+            var productIds = orderItens.Select(p => p.ProductId);
+            var productsFromDb = await _context.Products
+                .Where(p => productIds.Contains(p.Id))
+                .ToDictionaryAsync(p => p.Id);
+
+            foreach (var item in orderItens)
+            {
+                if (item.ProductId == 0)
+                    throw new InvalidIdException("Product ID cannot be zero!");
+
+                if (item.Quantity == 0)
+                    throw new InvalidResourceException("Product quantity cannot be zero!");
+
+                if (item.TotalPrice == 0)
+                    throw new InvalidResourceException("Product price cannot be zero!");
+
+                if (!productsFromDb.ContainsKey(item.ProductId))
+                    throw new NotFoundException($"Product with ID: {item.ProductId} was not found!");
+            }
         }
     }
 }

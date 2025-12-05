@@ -1,8 +1,6 @@
-﻿using FakeStoreDBAPI.Host.DTO.Customer;
-
-namespace FakeStoreDBAPI.Host.DTO.Order
+﻿namespace FakeStoreDBAPI.Host.DTO.Order
 {
-    public class OrderWithCustomerDto
+    public class OrderWithOrderItemsDto
     {
         public long Id { get; set; }
         public long CustomerId { get; set; }
@@ -17,6 +15,12 @@ namespace FakeStoreDBAPI.Host.DTO.Order
         public string? ShippingStatus { get; set; }
         public bool IsActive { get; set; }
 
-        public CustomerDto? Customer { get; set; }
+        public IEnumerable<OrderItemDto> OrderItems { get; set; }
+
+        public OrderWithOrderItemsDto()
+        {
+            OrderItems = new List<OrderItemDto>();
+        }
+
     }
 }

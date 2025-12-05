@@ -40,6 +40,12 @@ namespace FakeStoreDBAPI.Host.Middleware
                     message = invalidIdException.Message;
                 }
 
+                if (ex is InvalidResourceException invalidResourceException)
+                {
+                    statusCode = HttpStatusCode.BadRequest;
+                    message = invalidResourceException.Message;
+                }
+
                 if (ex is ConflictException conflictException)
                 {
                     statusCode = HttpStatusCode.Conflict;

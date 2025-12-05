@@ -17,5 +17,7 @@ namespace FakeStoreDBAPI.Host.Models
         public bool IsActive { get; set; } = true;
         public DateTime DateCreate { get; set; }
         public DateTime DateUpdate { get; set; }
+
+        public ICollection<OrderProduct>? OrderProducts { get; set; }
     }
 }

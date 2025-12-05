@@ -36,6 +36,13 @@ namespace FakeStoreDBAPI.Host.Controllers
             return Ok(order);
         }
 
+        [HttpGet("{orderGuid}/with-order-itens")]
+        public async Task<IActionResult> GetByGuidWithOrderItensAsync([FromRoute] string orderGuid)
+        {
+            var order = await _orderService.GetByGuidWithOrderItemsAsync(orderGuid);
+            return Ok(order);
+        }
+
         [HttpHead("{orderGuid}/order-exists")]
         public async Task<IActionResult> ExistsAsync([FromRoute] string orderGuid)
         {

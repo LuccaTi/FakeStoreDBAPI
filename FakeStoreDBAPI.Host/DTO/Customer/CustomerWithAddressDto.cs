@@ -10,6 +10,7 @@ namespace FakeStoreDBAPI.Host.DTO.Customer
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? Phone { get; set; }
+        public bool IsActive { get; set; }
 
         public AddressDto? Address { get; set; }
     }

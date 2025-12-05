@@ -36,6 +36,13 @@ namespace FakeStoreDBAPI.Host.Controllers
             return Ok(customer);
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> LoginAsync([FromBody] LoginRequestDto loginRequestDto)
+        {
+            var customer = await _customerService.LoginAsync(loginRequestDto);
+            return Ok(customer);
+        }
+
         [HttpHead("{id}/customer-exists")]
         public async Task<IActionResult> ExistsAsync([FromRoute] long id)
         {

@@ -13,5 +13,6 @@ namespace FakeStoreDBAPI.Host.DTO.Order
         public string? OrderStatus { get; set; }
         public string? PaymentStatus { get; set; }
         public string? ShippingStatus { get; set; }
+        public List<CreateOrderItemDto> OrderItems { get; set; } = new List<CreateOrderItemDto>();
     }
 }
