@@ -3,7 +3,7 @@
 ## Visão geral
 Este repositório contém uma API RESTful construída com ASP.NET Core (.NET 8) e Entity Framework Core. O projeto segue uma arquitetura em camadas (Controllers → Services → Data/Repository) e foi projetado para ser uma base robusta para aplicações que necessitam de um banco de dados relacional.
 
-A API implementa seu próprio banco de dados para persistir os dados, começando pela entidade `Address`. A solução está configurada com injeção de dependência, logging com Serilog, mapeamento de objetos com AutoMapper e documentação de API com Swagger.
+A API implementa seu próprio banco de dados para persistir os dados. A solução está configurada com injeção de dependência, logging com Serilog, mapeamento de objetos com AutoMapper e documentação de API com Swagger.
 
 ## Tecnologias e Bibliotecas Essenciais
 - **.NET 8**: Plataforma de desenvolvimento principal.
@@ -71,6 +71,7 @@ Configurações principais da aplicação:
 - **Padrão Repositório/Unit of Work**: O `FakeStoreDbContext` atua como uma implementação desses padrões, abstraindo o acesso direto ao banco e agrupando as operações.
 - **Tratamento de Exceções Global**: Um middleware (`ExceptionHandlerMiddleware`) captura exceções não tratadas em toda a aplicação, gerando logs e retornando uma resposta de erro padronizada (HTTP 500), evitando o vazamento de detalhes de implementação. Exceções específicas, como `NotFoundException`, são tratadas nos serviços para retornar os códigos de status corretos (HTTP 404).
 - **Migrations do EF Core**: A estrutura do banco de dados é gerenciada via código através de migrations, garantindo versionamento e reprodutibilidade do schema.
+- **Logging**: Os logs são registrados em uma pasta própria chamada `logs` dentro do diretório base da aplicação.
 
 ## Como Executar e Desenvolver
 1.  **Configurar o Banco de Dados**:
