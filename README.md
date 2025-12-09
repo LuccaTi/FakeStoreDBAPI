@@ -5,6 +5,8 @@ Este repositório contém uma API RESTful construída com ASP.NET Core (.NET 8) 
 
 A API implementa seu próprio banco de dados para persistir os dados. A solução está configurada com injeção de dependência, logging com Serilog, mapeamento de objetos com AutoMapper e documentação de API com Swagger.
 
+O objetivo da API é registrar em banco de dados local os dados de pedidos gerados a partir da fakestoreapi.com.
+
 ## Tecnologias e Bibliotecas Essenciais
 - **.NET 8**: Plataforma de desenvolvimento principal.
 - **Entity Framework Core 8**: ORM para interação com o banco de dados SQL Server. Utiliza o padrão de repositório através do `DbContext`.
@@ -49,9 +51,129 @@ A solução está contida em um único projeto executável, mas organizada em pa
     - **Resposta 404**: Se o endereço não for encontrado.
 
 - `DELETE /api/v1/Address/{id}`
-    - Faz o "soft delete" do registro apenas definindo ele como inativo (IsActive = false).
-    - **Resposta 204**: Indica que "soft delete" foi bem-sucedido, sem conteúdo no corpo da resposta.
+    - Deleta um endereço.
+    - **Resposta 204**: Indica que a deleção foi bem-sucedida.
     - **Resposta 404**: Se o endereço não for encontrado.
+
+### Clientes (Customer)
+- `GET /api/v1/Customer`
+    - Retorna todos os clientes cadastrados.
+    - **Resposta 200**: Lista de `CustomerDto`.
+
+- `GET /api/v1/Customer/{id}`
+    - Retorna um cliente específico por ID.
+    - **Resposta 200**: `CustomerDto` correspondente ao ID.
+    - **Resposta 404**: Se o cliente não for encontrado.
+
+- `GET /api/v1/Customer/{id}/with-address`
+    - Retorna um cliente com seu endereço.
+    - **Resposta 200**: `CustomerWithAddressDto`.
+    - **Resposta 404**: Se o cliente não for encontrado.
+
+- `POST /api/v1/Customer/login`
+    - Realiza o login do cliente.
+    - **Body**: `LoginRequestDto`.
+    - **Resposta 200**: `CustomerDto`.
+    - **Resposta 404**: Se o cliente não for encontrado.
+
+- `HEAD /api/v1/Customer/{id}/customer-exists`
+    - Verifica se um cliente existe.
+    - **Resposta 204**: Se o cliente existe.
+    - **Resposta 404**: Se o cliente não for encontrado.
+
+- `POST /api/v1/Customer`
+    - Cria um novo cliente.
+    - **Body**: `CreateCustomerDto`.
+    - **Resposta 201**: Retorna o cliente recém-criado com a URL para acessá-lo no header `Location`.
+
+- `PATCH /api/v1/Customer/{id}`
+    - Atualiza parcialmente um cliente existente.
+    - **Body**: `UpdateCustomerDto`.
+    - **Resposta 204**: Indica que a atualização foi bem-sucedida.
+    - **Resposta 404**: Se o cliente não for encontrado.
+
+- `DELETE /api/v1/Customer/{id}`
+    - Deleta um cliente.
+    - **Resposta 204**: Indica que a deleção foi bem-sucedida.
+    - **Resposta 404**: Se o cliente não for encontrado.
+
+### Produtos (Product)
+- `GET /api/v1/Product`
+    - Retorna todos os produtos cadastrados.
+    - **Resposta 200**: Lista de `ProductDto`.
+
+- `GET /api/v1/Product/{id}`
+    - Retorna um produto específico por ID.
+    - **Resposta 200**: `ProductDto` correspondente ao ID.
+    - **Resposta 404**: Se o produto não for encontrado.
+
+- `HEAD /api/v1/Product/{id}/product-exists`
+    - Verifica se um produto existe.
+    - **Resposta 204**: Se o produto existe.
+    - **Resposta 404**: Se o produto não for encontrado.
+
+- `POST /api/v1/Product/title-description`
+    - Busca um produto pelo título e descrição.
+    - **Body**: `TitleDescriptionDto`.
+    - **Resposta 200**: `ProductDto`.
+    - **Resposta 404**: Se o produto não for encontrado.
+
+- `POST /api/v1/Product`
+    - Cria um novo produto.
+    - **Body**: `CreateProductDto`.
+    - **Resposta 201**: Retorna o produto recém-criado com a URL para acessá-lo no header `Location`.
+
+- `PATCH /api/v1/Product/{id}`
+    - Atualiza parcialmente um produto existente.
+    - **Body**: `UpdateProductDto`.
+    - **Resposta 204**: Indica que a atualização foi bem-sucedida.
+    - **Resposta 404**: Se o produto não for encontrado.
+
+- `DELETE /api/v1/Product/{id}`
+    - Deleta um produto.
+    - **Resposta 204**: Indica que a deleção foi bem-sucedida.
+    - **Resposta 404**: Se o produto não for encontrado.
+
+### Pedidos (Order)
+- `GET /api/v1/Order`
+    - Retorna todos os pedidos cadastrados.
+    - **Resposta 200**: Lista de `OrderDto`.
+
+- `GET /api/v1/Order/{orderGuid}`
+    - Retorna um pedido específico por GUID.
+    - **Resposta 200**: `OrderDto` correspondente ao GUID.
+    - **Resposta 404**: Se o pedido não for encontrado.
+
+- `GET /api/v1/Order/{orderGuid}/with-customer`
+    - Retorna um pedido com seu cliente.
+    - **Resposta 200**: `OrderWithCustomerDto`.
+    - **Resposta 404**: Se o pedido não for encontrado.
+
+- `GET /api/v1/Order/{orderGuid}/with-order-itens`
+    - Retorna um pedido com seus itens.
+    - **Resposta 200**: `OrderWithOrderItemsDto`.
+    - **Resposta 404**: Se o pedido não for encontrado.
+
+- `HEAD /api/v1/Order/{orderGuid}/order-exists`
+    - Verifica se um pedido existe.
+    - **Resposta 204**: Se o pedido existe.
+    - **Resposta 404**: Se o pedido não for encontrado.
+
+- `POST /api/v1/Order`
+    - Cria um novo pedido.
+    - **Body**: `CreateOrderDto`.
+    - **Resposta 201**: Retorna o pedido recém-criado com a URL para acessá-lo no header `Location`.
+
+- `PATCH /api/v1/Order/{orderGuid}`
+    - Atualiza parcialmente um pedido existente.
+    - **Body**: `UpdateOrderDto`.
+    - **Resposta 204**: Indica que a atualização foi bem-sucedida.
+    - **Resposta 404**: Se o pedido não for encontrado.
+
+- `DELETE /api/v1/Order/{orderGuid}`
+    - Deleta um pedido.
+    - **Resposta 204**: Indica que a deleção foi bem-sucedida.
+    - **Resposta 404**: Se o pedido não for encontrado.
 
 ## Configuração
 
