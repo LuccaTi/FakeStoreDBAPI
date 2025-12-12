@@ -27,15 +27,15 @@ namespace FakeStoreDBAPI.Host.Services
 
         public async Task<IEnumerable<OrderDto>> GetAllAsync()
         {
-            _logger.LogDebug($"{_className} - Attempting to obtain all order records");
+            _logger.LogDebug($"{_className} - GetAllAsync - Attempting to obtain all order records");
             var orders = await _context.Orders.Where(o => o.IsActive).ToListAsync();
             if (orders.Count != 0)
             {
-                _logger.LogDebug($"{_className} - Records obtained: {orders.Count}");
+                _logger.LogDebug($"{_className} - GetAllAsync - Records obtained: {orders.Count}");
             }
             else
             {
-                _logger.LogWarning($"{_className} - List of records is empty");
+                _logger.LogWarning($"{_className} - GetAllAsync - List of records is empty");
             }
 
             return _mapper.Map<IEnumerable<OrderDto>>(orders);
@@ -43,19 +43,19 @@ namespace FakeStoreDBAPI.Host.Services
 
         public async Task<OrderDto?> GetByGuidAsync(string orderGuid)
         {
-            _logger.LogDebug($"{_className} - Attempting to find order with GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - GetByGuidAsync - Attempting to find order with GUID: '{orderGuid}'");
 
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
             if (order == null || !order.IsActive)
                 throw new NotFoundException($"Order with GUID: '{orderGuid}' was not found");
 
-            _logger.LogDebug($"{_className} - Found order with GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - GetByGuidAsync - Found order with GUID: '{orderGuid}'");
             return _mapper.Map<OrderDto>(order);
         }
 
         public async Task<OrderWithCustomerDto?> GetByGuidWithCustomerAsync(string orderGuid)
         {
-            _logger.LogDebug($"{_className} - Attempting to find order with GUID: '{orderGuid}' and return it with customer info");
+            _logger.LogDebug($"{_className} - GetByGuidWithCustomerAsync - Attempting to find order with GUID: '{orderGuid}' and return it with customer info");
 
             var order = await _context.Orders
                 .Include(o => o.Customer)
@@ -63,13 +63,13 @@ namespace FakeStoreDBAPI.Host.Services
             if (order == null || !order.IsActive)
                 throw new NotFoundException($"Order with GUID: '{orderGuid}' was not found");
 
-            _logger.LogDebug($"{_className} - Found order with GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - GetByGuidWithCustomerAsync - Found order with GUID: '{orderGuid}'");
             return _mapper.Map<OrderWithCustomerDto>(order);
         }
 
         public async Task<OrderWithOrderItemsDto?> GetByGuidWithOrderItemsAsync(string orderGuid)
         {
-            _logger.LogDebug($"{_className} - Attempting to find order with GUID: '{orderGuid}' and return it with it's itens");
+            _logger.LogDebug($"{_className} - GetByGuidWithOrderItemsAsync - Attempting to find order with GUID: '{orderGuid}' and return it with it's itens");
             var order = await _context.Orders
                 .Include(o => o.OrderProducts)
                 .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
@@ -77,13 +77,13 @@ namespace FakeStoreDBAPI.Host.Services
             if (order == null || !order.IsActive)
                 throw new NotFoundException($"Order with GUID: '{orderGuid}' was not found");
 
-            _logger.LogDebug($"{_className} - Found order with GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - GetByGuidWithOrderItemsAsync - Found order with GUID: '{orderGuid}'");
             return _mapper.Map<OrderWithOrderItemsDto>(order);
         }
 
         public async Task<OrderDto> PostAsync(CreateOrderDto orderDto)
         {
-            _logger.LogDebug($"{_className} - Attempting to post order");
+            _logger.LogDebug($"{_className} - PostAsync - Attempting to post order");
             var order = _mapper.Map<Order>(orderDto);
 
             await _customerService.CustomerExistsAsync(orderDto.CustomerId);
@@ -109,13 +109,13 @@ namespace FakeStoreDBAPI.Host.Services
             await _context.SaveChangesAsync();
 
             var postedOrder = _mapper.Map<OrderDto>(order);
-            _logger.LogDebug($"{_className} - Posted order with GUID: '{postedOrder.OrderGuid}'");
+            _logger.LogDebug($"{_className} - PostAsync - Posted order with GUID: '{postedOrder.OrderGuid}'");
             return postedOrder;
         }
 
         public async Task PatchAsync(string orderGuid, UpdateOrderDto orderDto)
         {
-            _logger.LogDebug($"{_className} - Attempting to patch order with GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - PatchAsync - Attempting to patch order with GUID: '{orderGuid}'");
             var orderToUpdate = await _context.Orders
                 .Include(o => o.OrderProducts.Where(op => op.IsActive))
                 .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
@@ -132,14 +132,14 @@ namespace FakeStoreDBAPI.Host.Services
 
             if (orderDto.CustomerId.HasValue)
             {
-                _logger.LogDebug($"{_className} - Checking if customer with ID: {orderDto.CustomerId.Value} is valid");
+                _logger.LogDebug($"{_className} - PatchAsync - Checking if customer with ID: {orderDto.CustomerId.Value} is valid");
                 if (orderDto.CustomerId.Value == 0)
                     throw new InvalidIdException("Customer ID cannot be zero");
 
                 await _customerService.CustomerExistsAsync(orderDto.CustomerId.Value);
 
                 orderToUpdate.CustomerId = orderDto.CustomerId.Value;
-                _logger.LogDebug($"Order GUID: '{orderGuid}' patched it's customer ID to: {orderDto.CustomerId.Value}");
+                _logger.LogDebug($"{_className} - PatchAsync - Order GUID: '{orderGuid}' patched it's customer ID to: {orderDto.CustomerId.Value}");
             }
             else
             {
@@ -181,12 +181,12 @@ namespace FakeStoreDBAPI.Host.Services
             await ValidatePrices(orderToUpdate);
 
             await _context.SaveChangesAsync();
-            _logger.LogDebug($"{_className} - Patched order with GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - PatchAsync - Patched order with GUID: '{orderGuid}'");
         }
 
         public async Task DeleteAsync(string orderGuid)
         {
-            _logger.LogDebug($"{_className} - Attempting to deactive order with GUID: '{orderGuid}' and it's dependencies (ORDER_PRODUCT)");
+            _logger.LogDebug($"{_className} - DeleteAsync - Attempting to deactive order with GUID: '{orderGuid}' and it's dependencies (ORDER_PRODUCT)");
             var orderToDelete = await _context.Orders
                 .Include(o => o.OrderProducts)
                 .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
@@ -200,34 +200,34 @@ namespace FakeStoreDBAPI.Host.Services
                 {
                     dependency.IsActive = false;
                 }
-                _logger.LogDebug($"{_className} - Associated dependecies deactivated: {orderToDelete.OrderProducts.Count}");
+                _logger.LogDebug($"{_className} - DeleteAsync - Associated dependecies deactivated: {orderToDelete.OrderProducts.Count}");
             }
             else
             {
-                _logger.LogDebug($"{_className} - order didn't have any dependencies associated with it");
+                _logger.LogDebug($"{_className} - DeleteAsync - order didn't have any dependencies associated with it");
             }
 
             orderToDelete.IsActive = false;
             await _context.SaveChangesAsync();
-            _logger.LogDebug($"{_className} - Successfully deactivated order with GUID: '{orderGuid}'");
+            _logger.LogDebug($"{_className} - DeleteAsync - Successfully deactivated order with GUID: '{orderGuid}'");
         }
 
         public async Task OrderExistsAsync(string orderGuid)
         {
-            _logger.LogDebug($"{_className} - Checking if order with GUID: '{orderGuid}' exists and is active");
+            _logger.LogDebug($"{_className} - OrderExistsAsync - Checking if order with GUID: '{orderGuid}' exists and is active");
             bool orderExists = false;
             orderExists = await _context.Orders.AnyAsync(o => o.OrderGuid == orderGuid && o.IsActive);
             if (!orderExists)
                 throw new NotFoundException($"Order with GUID: '{orderGuid}' does not exists or is inactive");
 
-            _logger.LogDebug($"{_className} - Order exists and is active");
+            _logger.LogDebug($"{_className} - OrderExistsAsync - Order exists and is active");
         }
 
         public async Task ValidatePrices(Order order)
         {
             if (order.OrderProducts != null && order.OrderProducts.Count != 0)
             {
-                _logger.LogDebug($"Validating if order with GUID: {order.OrderGuid} total price and itens prices are valid");
+                _logger.LogDebug($"{_className} - ValidatePrices - Validating if order with GUID: {order.OrderGuid} total price and itens prices are valid");
 
                 var productIds = order.OrderProducts.Select(op => op.ProductId).ToList();
 
@@ -248,7 +248,7 @@ namespace FakeStoreDBAPI.Host.Services
 
                     if (dtoProductPrice != product!.Price)
                     {
-                        _logger.LogWarning("Product price obtained in HTTP request is different from product price in database!");
+                        _logger.LogWarning($"{_className} - ValidatePrices - Product price obtained in HTTP request is different from product price in database!");
                         throw new InvalidResourceException("Product price obtained in HTTP request is invalid!");
                     }
 
@@ -257,7 +257,7 @@ namespace FakeStoreDBAPI.Host.Services
 
                 if (calculatedTotalPrice != order.TotalPrice)
                 {
-                    _logger.LogWarning("Order total price obtained in HTTP request is different from order total price in database!");
+                    _logger.LogWarning($"{_className} - ValidatePrices - Order total price obtained in HTTP request is different from order total price in database!");
                     throw new InvalidResourceException("Order total price obtained in HTTP request is invalid!");
                 }
             }
@@ -265,7 +265,7 @@ namespace FakeStoreDBAPI.Host.Services
 
         public async Task ValidateOrderItens(IEnumerable<CreateOrderItemDto> orderItens, string orderGuid)
         {
-            _logger.LogDebug($"{_className} - Validating items from order with GUID: {orderGuid}");
+            _logger.LogDebug($"{_className} - ValidateOrderItens - Validating items from order with GUID: {orderGuid}");
             var productIds = orderItens.Select(p => p.ProductId);
             var productsFromDb = await _context.Products
                 .Where(p => productIds.Contains(p.Id))

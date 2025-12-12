@@ -9,7 +9,7 @@ using FakeStoreDBAPI.Host.Exceptions;
 
 namespace FakeStoreDBAPI.Host.Services
 {
-    internal class AddressService : IAddressService
+    public class AddressService : IAddressService
     {
         private const string _className = "AddressService";
         private readonly FakeStoreDbContext _context;
@@ -25,22 +25,22 @@ namespace FakeStoreDBAPI.Host.Services
 
         public async Task<IEnumerable<AddressDto>> GetAllAsync()
         {
-            _logger.LogDebug($"{_className} - Attempting to obtain all address records");
+            _logger.LogDebug($"{_className} - GetAllAsync -Attempting to obtain all address records");
             var addresses = await _context.Addresses.Where(o => o.IsActive).ToListAsync();
             if (addresses.Count != 0)
             {
-                _logger.LogDebug($"{_className} - Records obtained: {addresses.Count}");
+                _logger.LogDebug($"{_className} - GetAllAsync - Records obtained: {addresses.Count}");
             }
             else
             {
-                _logger.LogWarning($"{_className} - List of records is empty!");
+                _logger.LogWarning($"{_className} - GetAllAsync - List of records is empty!");
             }
             return _mapper.Map<IEnumerable<AddressDto>>(addresses);
         }
 
         public async Task<AddressDto?> GetByIdAsync(long id)
         {
-            _logger.LogDebug($"{_className} - Attempting to find address with ID: {id}");
+            _logger.LogDebug($"{_className} - GetByIdAsync - Attempting to find address with ID: {id}");
             if (id == 0)
                 throw new InvalidIdException($"Address ID cannot be zero!");
 
@@ -48,25 +48,25 @@ namespace FakeStoreDBAPI.Host.Services
             if (address == null || !address.IsActive)
                 throw new NotFoundException($"Address with ID: {id} was not found");
 
-            _logger.LogDebug($"{_className} - Found address with ID: {id}");
+            _logger.LogDebug($"{_className} - GetByIdAsync - Found address with ID: {id}");
             return _mapper.Map<AddressDto>(address);
         }
 
         public async Task<AddressDto> PostAsync(CreateAddressDto addressDto)
         {
-            _logger.LogDebug($"{_className} - Attempting to post address");
+            _logger.LogDebug($"{_className} - PostAsync - Attempting to post address");
             var address = _mapper.Map<Address>(addressDto);
             _context.Addresses.Add(address);
             await _context.SaveChangesAsync();
 
             var postedAddress = _mapper.Map<AddressDto>(address);
-            _logger.LogDebug($"{_className} - Posted address with ID: {postedAddress.Id}");
+            _logger.LogDebug($"{_className} - PostAsync - Posted address with ID: {postedAddress.Id}");
             return postedAddress;
         }
 
         public async Task PatchAsync(long id, UpdateAddressDto addressDto)
         {
-            _logger.LogDebug($"{_className} - Attempting to patch address with ID: {id}");
+            _logger.LogDebug($"{_className} - PatchAsync - Attempting to patch address with ID: {id}");
             if (id == 0)
                 throw new InvalidIdException("Address ID cannot be zero!");
 
@@ -76,12 +76,12 @@ namespace FakeStoreDBAPI.Host.Services
 
             _mapper.Map(addressDto, addressToUpdate);
             await _context.SaveChangesAsync();
-            _logger.LogDebug($"{_className} - Patched address with ID: {id}");
+            _logger.LogDebug($"{_className} - PatchAsync - Patched address with ID: {id}");
         }
 
         public async Task DeleteAsync(long id)
         {
-            _logger.LogDebug($"{_className} - Attempting to deactivate address with ID: {id} and its dependencies");
+            _logger.LogDebug($"{_className} - DeleteAsync - Attempting to deactivate address with ID: {id} and its dependencies");
             if (id == 0)
                 throw new InvalidIdException($"Address ID cannot be zero!");
 
@@ -89,7 +89,7 @@ namespace FakeStoreDBAPI.Host.Services
             if (addressToDelete == null || !addressToDelete.IsActive)
                 throw new NotFoundException($"Address with ID: {id} was not found, address not deactivated");
 
-            _logger.LogDebug($"{_className} - Checking if address had any customers associated");
+            _logger.LogDebug($"{_className} - DeleteAsync - Checking if address had any customers associated");
             var customersToDeactivate = await _context.Customers
                 .Where(c => c.AddressId == id && c.IsActive)
                 .ToListAsync();
@@ -100,20 +100,20 @@ namespace FakeStoreDBAPI.Host.Services
                 {
                     customer.IsActive = false;
                 }
-                _logger.LogDebug($"{_className} - Associated customers deactivated: {customersToDeactivate.Count}");
+                _logger.LogDebug($"{_className} - DeleteAsync - Associated customers deactivated: {customersToDeactivate.Count}");
             }
             else
             {
-                _logger.LogDebug($"{_className} - Address didn't have any customers associated with it");
+                _logger.LogDebug($"{_className} - DeleteAsync - Address didn't have any customers associated with it");
             }
             addressToDelete.IsActive = false;
             await _context.SaveChangesAsync();
-            _logger.LogDebug($"{_className} - Successfully deactivated address with ID: {id} ");
+            _logger.LogDebug($"{_className} - DeleteAsync - Successfully deactivated address with ID: {id} ");
         }
 
         public async Task AddressExistsAsync(long id)
         {
-            _logger.LogDebug($"{_className} - Checking if address with ID: {id} exists and is active");
+            _logger.LogDebug($"{_className} - AddressExistsAsync - Checking if address with ID: {id} exists and is active");
             if (id == 0)
                 throw new InvalidIdException("Address ID cannot be zero!");
 
@@ -122,7 +122,7 @@ namespace FakeStoreDBAPI.Host.Services
             if (!addressExists)
                 throw new NotFoundException($"Address with ID: {id} does not exists or is inactive");
 
-            _logger.LogDebug($"{_className} - Address exists and is active");
+            _logger.LogDebug($"{_className} - AddressExistsAsync - Address exists and is active");
         }
     }
 }

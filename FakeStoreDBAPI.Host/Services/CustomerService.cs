@@ -26,22 +26,22 @@ namespace FakeStoreDBAPI.Host.Services
 
         public async Task<IEnumerable<CustomerDto>> GetAllAsync()
         {
-            _logger.LogDebug($"{_className} - Attempting to obtain all customer records");
+            _logger.LogDebug($"{_className} - GetAllAsync - Attempting to obtain all customer records");
             var customers = await _context.Customers.Where(o => o.IsActive).ToListAsync();
             if (customers.Count != 0)
             {
-                _logger.LogDebug($"{_className} - Records obtained: {customers.Count}");
+                _logger.LogDebug($"{_className} - GetAllAsync - Records obtained: {customers.Count}");
             }
             else
             {
-                _logger.LogWarning($"{_className} - List of records is empty");
+                _logger.LogWarning($"{_className} - GetAllAsync - List of records is empty");
             }
             return _mapper.Map<IEnumerable<CustomerDto>>(customers);
         }
 
         public async Task<CustomerDto?> GetByIdAsync(long id)
         {
-            _logger.LogDebug($"{_className} - Attempting to find customer with ID: {id}");
+            _logger.LogDebug($"{_className} - GetByIdAsync - Attempting to find customer with ID: {id}");
             if (id == 0)
                 throw new InvalidIdException($"Customer ID cannot be zero!");
 
@@ -49,13 +49,13 @@ namespace FakeStoreDBAPI.Host.Services
             if (customer == null || !customer.IsActive)
                 throw new NotFoundException($"Customer with ID: {id} was not found!");
 
-            _logger.LogDebug($"{_className} - Found customer with ID: {id}");
+            _logger.LogDebug($"{_className} - GetByIdAsync - Found customer with ID: {id}");
             return _mapper.Map<CustomerDto>(customer);
         }
 
         public async Task<CustomerWithAddressDto?> GetByIdWithAddressAsync(long id)
         {
-            _logger.LogDebug($"{_className} - Attempting to find customer with ID: {id} and return it with address info");
+            _logger.LogDebug($"{_className} - GetByIdWithAddressAsync - Attempting to find customer with ID: {id} and return it with address info");
             if (id == 0)
                 throw new InvalidIdException($"Customer ID cannot be zero!");
 
@@ -65,24 +65,24 @@ namespace FakeStoreDBAPI.Host.Services
             if (customer == null || !customer.IsActive)
                 throw new NotFoundException($"Customer with ID: {id} was not found!");
 
-            _logger.LogDebug($"{_className} - Found customer with ID: {id}");
+            _logger.LogDebug($"{_className} - GetByIdWithAddressAsync - Found customer with ID: {id}");
             return _mapper.Map<CustomerWithAddressDto>(customer);
         }
 
         public async Task<CustomerDto?> LoginAsync(LoginRequestDto loginRequestDto)
         {
-            _logger.LogDebug($"{_className} - Attempting to obtain customer by using username: '{loginRequestDto.Username}' and it's password");
+            _logger.LogDebug($"{_className} - LoginAsync - Attempting to obtain customer by using username: '{loginRequestDto.Username}' and it's password");
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserName == loginRequestDto.Username && c.Password == loginRequestDto.Password && c.IsActive);
             if (customer == null)
                 throw new NotFoundException($"Customer with username: '{loginRequestDto.Username}' was not found!");
 
-            _logger.LogDebug($"{_className} - Found customer with username: '{loginRequestDto.Username}'");
+            _logger.LogDebug($"{_className} - LoginAsync - Found customer with username: '{loginRequestDto.Username}'");
             return _mapper.Map<CustomerDto>(customer);
         }
 
         public async Task<CustomerDto> PostAsync(CreateCustomerDto customerDto)
         {
-            _logger.LogDebug($"{_className} - Attempting to post customer");
+            _logger.LogDebug($"{_className} - PostAsync - Attempting to post customer");
             var customer = _mapper.Map<Customer>(customerDto);
 
             await _addressService.AddressExistsAsync(customerDto.AddressId);
@@ -91,13 +91,13 @@ namespace FakeStoreDBAPI.Host.Services
             await _context.SaveChangesAsync();
 
             var postedCustomer = _mapper.Map<CustomerDto>(customer);
-            _logger.LogDebug($"{_className} - Posted customer with ID: {postedCustomer.Id}");
+            _logger.LogDebug($"{_className} - PostAsync - Posted customer with ID: {postedCustomer.Id}");
             return postedCustomer;
         }
 
         public async Task PatchAsync(long id, UpdateCustomerDto customerDto)
         {
-            _logger.LogDebug($"{_className} - Attempting to patch customer with ID: {id}");
+            _logger.LogDebug($"{_className} - PatchAsync - Attempting to patch customer with ID: {id}");
 
             var customerToUpdate = await _context.Customers.FindAsync(id);
             if (customerToUpdate == null || !customerToUpdate.IsActive)
@@ -107,14 +107,14 @@ namespace FakeStoreDBAPI.Host.Services
 
             if (customerDto.AddressId.HasValue)
             {
-                _logger.LogDebug($"{_className} - Client provided address ID. Validating ID: {customerDto.AddressId.Value}");
+                _logger.LogDebug($"{_className} - PatchAsync - Client provided address ID. Validating ID: {customerDto.AddressId.Value}");
                 if (customerDto.AddressId.Value == 0)
                     throw new InvalidIdException("Address ID cannot be zero!");
 
                 await _addressService.AddressExistsAsync(customerDto.AddressId.Value);
 
                 customerToUpdate.AddressId = customerDto.AddressId.Value;
-                _logger.LogDebug($"Customer with ID: {id} patched it's address ID to: {customerDto.AddressId.Value}");
+                _logger.LogDebug($"{_className} - PatchAsync - Customer with ID: {id} patched it's address ID to: {customerDto.AddressId.Value}");
             }
             else
             {
@@ -122,12 +122,12 @@ namespace FakeStoreDBAPI.Host.Services
             }
 
             await _context.SaveChangesAsync();
-            _logger.LogDebug($"{_className} - Patched customer with ID: {id}");
+            _logger.LogDebug($"{_className} - PatchAsync - Patched customer with ID: {id}");
         }
 
         public async Task DeleteAsync(long id)
         {
-            _logger.LogDebug($"{_className} - Attempting to deactive customer with ID: {id}");
+            _logger.LogDebug($"{_className} - DeleteAsync - Attempting to deactive customer with ID: {id}");
             if (id == 0)
                 throw new InvalidIdException($"Customer ID cannot be zero!");
 
@@ -137,12 +137,12 @@ namespace FakeStoreDBAPI.Host.Services
 
             customerToDelete.IsActive = false;
             await _context.SaveChangesAsync();
-            _logger.LogDebug($"{_className} - Successfully deactivated customer with ID: {id}");
+            _logger.LogDebug($"{_className} - DeleteAsync - Successfully deactivated customer with ID: {id}");
         }
 
         public async Task CustomerExistsAsync(long id)
         {
-            _logger.LogDebug($"{_className} - Checking if customer with ID: {id} exists and is active");
+            _logger.LogDebug($"{_className} - CustomerExistsAsync - Checking if customer with ID: {id} exists and is active");
             if (id == 0)
                 throw new InvalidIdException("Customer ID cannot be zero!");
 
@@ -151,7 +151,7 @@ namespace FakeStoreDBAPI.Host.Services
             if (!customerExists)
                 throw new NotFoundException($"Customer with ID: {id} does not exists or is inactive!");
 
-            _logger.LogDebug($"{_className} - Customer with ID: {id} exists and is active");
+            _logger.LogDebug($"{_className} - CustomerExistsAsync - Customer with ID: {id} exists and is active");
         }
     }
 }

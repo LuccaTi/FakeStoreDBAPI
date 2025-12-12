@@ -1,4 +1,5 @@
 using FakeStoreDBAPI.Host.Data;
+using FakeStoreDBAPI.Host.Models;
 using FakeStoreDBAPI.Host.Services;
 using FakeStoreDBAPI.Host.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -43,6 +44,7 @@ namespace FakeStoreDBAPI.Host
                 builder.Services.AddScoped<ICustomerService, CustomerService>();
                 builder.Services.AddScoped<IProductService, ProductService>();
                 builder.Services.AddScoped<IOrderService, OrderService>();
+                builder.Services.AddScoped<IProcessedFileLogService, ProcessedFileLogService>();
                 Log.Information("Services scope added");
 
                 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
