@@ -23,7 +23,6 @@ namespace FakeStoreDBAPI.Host.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"An unhandled exception has occurred: {ex.Message}");
 
                 var statusCode = HttpStatusCode.InternalServerError;
                 var message = "An internal server error has occured.";
@@ -32,24 +31,29 @@ namespace FakeStoreDBAPI.Host.Middleware
                 {
                     statusCode = HttpStatusCode.NotFound;
                     message = notFoundException.Message;
+                    _logger.LogWarning($"Resource not found: {notFoundException.Message}");
                 }
-
-                if (ex is InvalidIdException invalidIdException)
+                else if (ex is InvalidIdException invalidIdException)
                 {
                     statusCode = HttpStatusCode.BadRequest;
                     message = invalidIdException.Message;
+                    _logger.LogWarning($"Invalid ID provided: {invalidIdException.Message}");
                 }
-
-                if (ex is InvalidResourceException invalidResourceException)
+                else if (ex is InvalidResourceException invalidResourceException)
                 {
                     statusCode = HttpStatusCode.BadRequest;
                     message = invalidResourceException.Message;
+                    _logger.LogWarning($"Invalid resource: {invalidResourceException.Message}");
                 }
-
-                if (ex is ConflictException conflictException)
+                else if (ex is ConflictException conflictException)
                 {
                     statusCode = HttpStatusCode.Conflict;
                     message = conflictException.Message;
+                    _logger.LogWarning($"Conflict occurred: {conflictException.Message}");
+                }
+                else
+                {
+                    _logger.LogError(ex, $"An unhandled exception has occurred: {ex.Message}");
                 }
 
                 context.Response.ContentType = "application/json";
