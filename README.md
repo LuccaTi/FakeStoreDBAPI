@@ -1,11 +1,13 @@
 # FakeStoreDBAPI — Web API em .NET 8
 
 ## Visão geral
-Este repositório contém uma API RESTful construída com ASP.NET Core (.NET 8) e Entity Framework Core. O projeto segue uma arquitetura em camadas (Controllers → Services → Data/Repository) e foi projetado para ser uma base robusta para aplicações que necessitam de um banco de dados relacional.
+Este repositório contém uma API RESTful construída com ASP.NET Core (.NET 8) e Entity Framework Core. O projeto segue uma arquitetura em camadas (Controllers → Services → Data/Repository).
 
-A API implementa seu próprio banco de dados para persistir os dados. A solução está configurada com injeção de dependência, logging com Serilog, mapeamento de objetos com AutoMapper e documentação de API com Swagger.
+A solução está configurada com injeção de dependência, logging com Serilog, mapeamento de objetos com AutoMapper e documentação de API com Swagger.
 
-O objetivo da API é registrar em banco de dados local os dados de pedidos gerados a partir da fakestoreapi.com.
+O objetivo da API é registrar em banco de dados local os dados de pedidos gerados a partir da fakestoreapi.com. 
+
+O banco de dados local precisa ser hospedado pelo SQL Server, a string de conexão está no appsettings.json da solução para que seja customizada, por padrão segue o formato de localhost.
 
 ## Tecnologias e Bibliotecas Essenciais
 - **.NET 8**: Plataforma de desenvolvimento principal.
@@ -184,7 +186,7 @@ Configurações principais da aplicação:
 - **`AllowedHosts`**: Hosts permitidos para acessar a aplicação.
 
 ### Perfis de execução (launchSettings.json)
-- **HTTPS**: `https://localhost:5001` e `http://localhost:5000`
+- **HTTPS**: `https://localhost:5003`
 - **Ambiente Padrão**: `Development`, que habilita o Swagger e outras ferramentas de desenvolvimento.
 
 ## Arquitetura e Padrões de Projeto
@@ -214,4 +216,5 @@ Configurações principais da aplicação:
       ```
 
 4.  **Testar a API**:
-    - Navegue para a URL do Swagger (ex: `https://localhost:5001/swagger`) para visualizar e interagir com os endpoints.
+    - Em desenvolvimento, navegue para a URL do Swagger (ex: `https://localhost:5003/swagger`) para visualizar e interagir com os endpoints.
+    - Em produção, a API estará escutando no endereço `https://localhost:444/`.
