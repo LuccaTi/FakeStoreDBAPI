@@ -15,6 +15,20 @@ namespace FakeStoreDBAPI.Host.Controllers
             _processedFileService = processedFileLogService;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllAsync()
+        {
+            var processedFileLogs = await _processedFileService.GetAllAsync();
+            return Ok(processedFileLogs);
+        }
+
+        [HttpGet("{id:long}")]
+        public async Task<IActionResult> GetByIdAsync([FromRoute] long id)
+        {
+            var processedFile = await _processedFileService.GetByIdAsync(id);
+            return Ok(processedFile);
+        }
+
         [HttpGet("{fileName}", Name = "GetFileByFileName")]
         public async Task<IActionResult> GetByFileNameAsync([FromRoute] string fileName)
         {
@@ -26,7 +40,14 @@ namespace FakeStoreDBAPI.Host.Controllers
         public async Task<IActionResult> PostAsync([FromBody] CreateProcessedFileLogDto createProcessedFileLogDto)
         {
             var createdProcessedFile = await _processedFileService.PostAsync(createProcessedFileLogDto);
-            return CreatedAtRoute("GetFileByFileName", new { id = createdProcessedFile.Id }, createdProcessedFile);
+            return CreatedAtRoute("GetFileByFileName", new { fileName = createdProcessedFile.FileName }, createdProcessedFile);
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchAsync([FromBody] UpdateProcessedFileLogDto processedFileDto, [FromRoute] long id)
+        {
+            await _processedFileService.PatchAsync(processedFileDto, id);
+            return NoContent();
         }
     }
 }

@@ -10,6 +10,7 @@ namespace FakeStoreDBAPI.Host.Mappers
         {
             CreateMap<CreateProcessedFileLogDto, ProcessedFileLog>();
             CreateMap<ProcessedFileLog, ProcessedFileLogDto>();
+            CreateMap<UpdateProcessedFileLogDto, ProcessedFileLog>();
         }
     }
 }
