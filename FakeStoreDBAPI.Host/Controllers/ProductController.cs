@@ -57,7 +57,7 @@ namespace FakeStoreDBAPI.Host.Controllers
         {
             var createdProduct = await _productService.PostWithProcessedFileLogAsync(productDto, fileName);
             return CreatedAtRoute("GetProductById", new { id = createdProduct.Id }, createdProduct);
-        }// Fazer a migration e testar
+        }
 
         [HttpPatch("{id}")]
         public async Task<IActionResult> PatchAsync([FromRoute] long id, [FromBody] UpdateProductDto product)

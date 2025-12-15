@@ -15,14 +15,12 @@ namespace FakeStoreDBAPI.Host.Services
         private readonly FakeStoreDbContext _context;
         private readonly IMapper _mapper;
         private readonly ILogger<ProductService> _logger;
-        private readonly IProcessedFileLogService _processedFileLogService;
 
-        public ProductService(FakeStoreDbContext context, IMapper mapper, ILogger<ProductService> logger, IProcessedFileLogService processedFileLogService)
+        public ProductService(FakeStoreDbContext context, IMapper mapper, ILogger<ProductService> logger)
         {
             _context = context;
             _mapper = mapper;
             _logger = logger;
-            _processedFileLogService = processedFileLogService;
         }
 
         public async Task<IEnumerable<ProductDto>> GetAllAsync()
@@ -67,7 +65,10 @@ namespace FakeStoreDBAPI.Host.Services
 
         public async Task<ProductDto> PostAsync(CreateProductDto productDto)
         {
-            _logger.LogDebug($"{_className} - PostAsync - Attempting to post product");
+            _logger.LogDebug($"{_className} - PostAsync - Attempting to post product titled: {productDto.Title}");
+            if (productDto.Price == 0)
+                throw new InvalidResourceException($"Product price must be higher than zero!");
+
             var productToPost = _mapper.Map<Product>(productDto);
             _context.Products.Add(productToPost);
             await _context.SaveChangesAsync();
@@ -79,7 +80,10 @@ namespace FakeStoreDBAPI.Host.Services
 
         public async Task<ProductDto> PostWithProcessedFileLogAsync(CreateProductDto productDto, string fileName)
         {
-            _logger.LogDebug($"{_className} - PostWithProcessedFileLogAsync - Attempting to post product with processed file log");
+            _logger.LogDebug($"{_className} - PostWithProcessedFileLogAsync - Attempting to post product titled: {productDto.Title} with processed file log, fileName: {fileName}");
+            if (productDto.Price == 0)
+                throw new InvalidResourceException($"Product price must be higher than zero!");
+            
             if (string.IsNullOrEmpty(fileName))
                 throw new InvalidResourceException($"Filename provided cannot be null or empty!");
 
