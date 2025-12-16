@@ -16,44 +16,51 @@ namespace FakeStoreDBAPI.Host.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
         {
-            var addresses = await _addressService.GetAllAsync();
+            var addresses = await _addressService.GetAllAsync(cancellationToken);
             return Ok(addresses);
         }
 
         [HttpGet("{id}", Name = "GetAddressById")]
-        public async Task<IActionResult> GetByIdAsync([FromRoute] long id)
+        public async Task<IActionResult> GetByIdAsync([FromRoute] long id, CancellationToken cancellationToken)
         {
-            var address = await _addressService.GetByIdAsync(id);
+            var address = await _addressService.GetByIdAsync(id, cancellationToken);
             return Ok(address);
         }
 
         [HttpHead("{id}/address-exists")]
-        public async Task<IActionResult> ExistsAsync([FromRoute] long id)
+        public async Task<IActionResult> ExistsAsync([FromRoute] long id, CancellationToken cancellationToken)
         {
-            await _addressService.AddressExistsAsync(id);
+            await _addressService.AddressExistsAsync(id, cancellationToken);
             return NoContent();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> PostAsync([FromBody] CreateAddressDto addressDto)
+        [HttpPost("street-number")]
+        public async Task<IActionResult> GetByStreetNumberAsync([FromBody] StreetNumberDto streetNumberDto, CancellationToken cancellationToken)
         {
-            var createdAddress = await _addressService.PostAsync(addressDto);
+            var address = await _addressService.GetByStreetNumberAsync(streetNumberDto, cancellationToken);
+            return Ok(address);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PostAsync([FromBody] CreateAddressDto addressDto, CancellationToken cancellationToken)
+        {
+            var createdAddress = await _addressService.PostAsync(addressDto, cancellationToken);
             return CreatedAtRoute("GetAddressById", new { id = createdAddress.Id }, createdAddress);
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchAsync([FromRoute] long id, [FromBody] UpdateAddressDto addressDto)
+        public async Task<IActionResult> PatchAsync([FromRoute] long id, [FromBody] UpdateAddressDto addressDto, CancellationToken cancellationToken)
         {
-            await _addressService.PatchAsync(id, addressDto);
+            await _addressService.PatchAsync(id, addressDto, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAsync([FromRoute] long id)
+        public async Task<IActionResult> DeleteAsync([FromRoute] long id, CancellationToken cancellationToken)
         {
-            await _addressService.DeleteAsync(id);
+            await _addressService.DeleteAsync(id, cancellationToken);
             return NoContent();
         }
     }

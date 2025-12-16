@@ -23,10 +23,10 @@ namespace FakeStoreDBAPI.Host.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<ProductDto>> GetAllAsync()
+        public async Task<IEnumerable<ProductDto>> GetAllAsync(CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetAllAsync - Attempting to obtain all product records");
-            var products = await _context.Products.Where(o => o.IsActive).ToListAsync();
+            var products = await _context.Products.Where(o => o.IsActive).ToListAsync(cancellationToken);
             if (products.Count != 0)
             {
                 _logger.LogDebug($"{_className} - GetAllAsync - Records obtained: {products.Count}");
@@ -38,13 +38,13 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<IEnumerable<ProductDto>>(products);
         }
 
-        public async Task<ProductDto?> GetByIdAsync(long id)
+        public async Task<ProductDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetByIdAsync - Attempting to find product with ID: {id}");
             if (id == 0)
                 throw new InvalidIdException("Product with ID cannot be zero!");
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products.FindAsync(new object[] { id }, cancellationToken);
             if (product == null || !product.IsActive)
                 throw new NotFoundException($"Product with ID: {id} was not found!");
 
@@ -52,18 +52,18 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<ProductDto>(product);
         }
 
-        public async Task<ProductDto?> GetByTitleDescription(TitleDescriptionDto titleDescriptionDto)
+        public async Task<ProductDto?> GetByTitleDescriptionAsync(TitleDescriptionDto titleDescriptionDto, CancellationToken cancellationToken)
         {
-            _logger.LogDebug($"{_className} - GetByTitleDescription - Attempting to obtain product with title: '{titleDescriptionDto.Title}' and description: '{titleDescriptionDto.Description}'");
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.Title == titleDescriptionDto.Title && p.Description == titleDescriptionDto.Description && p.IsActive);
+            _logger.LogDebug($"{_className} - GetByTitleDescriptionAsync - Attempting to obtain product with title: '{titleDescriptionDto.Title}' and description: '{titleDescriptionDto.Description}'");
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Title == titleDescriptionDto.Title && p.Description == titleDescriptionDto.Description && p.IsActive, cancellationToken);
             if (product == null)
                 throw new NotFoundException($"Product with title: '{titleDescriptionDto.Title}' and description: '{titleDescriptionDto.Description}' was not found!");
 
-            _logger.LogDebug($"{_className} - GetByTitleDescription - Found product with title: '{titleDescriptionDto.Title}' and description: '{titleDescriptionDto.Description}'");
+            _logger.LogDebug($"{_className} - GetByTitleDescriptionAsync - Found product with title: '{titleDescriptionDto.Title}' and description: '{titleDescriptionDto.Description}'");
             return _mapper.Map<ProductDto>(product);
         }
 
-        public async Task<ProductDto> PostAsync(CreateProductDto productDto)
+        public async Task<ProductDto> PostAsync(CreateProductDto productDto, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - PostAsync - Attempting to post product titled: {productDto.Title}");
             if (productDto.Price == 0)
@@ -71,14 +71,14 @@ namespace FakeStoreDBAPI.Host.Services
 
             var productToPost = _mapper.Map<Product>(productDto);
             _context.Products.Add(productToPost);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             var postedProduct = _mapper.Map<ProductDto>(productToPost);
             _logger.LogDebug($"{_className} - PostAsync - Posted product with ID: {postedProduct.Id}");
             return postedProduct;
         }
 
-        public async Task<ProductDto> PostWithProcessedFileLogAsync(CreateProductDto productDto, string fileName)
+        public async Task<ProductDto> PostWithProcessedFileLogAsync(CreateProductDto productDto, string fileName, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - PostWithProcessedFileLogAsync - Attempting to post product titled: {productDto.Title} with processed file log, fileName: {fileName}");
             if (productDto.Price == 0)
@@ -96,7 +96,7 @@ namespace FakeStoreDBAPI.Host.Services
             };
             _context.ProcessedFileLogs.Add(processedFileLogToPost);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             var postedProduct = _mapper.Map<ProductDto>(productToPost);
             var postedProcessedFile = _mapper.Map<ProcessedFileLogDto>(processedFileLogToPost);
@@ -105,7 +105,7 @@ namespace FakeStoreDBAPI.Host.Services
             return postedProduct;
         }
 
-        public async Task PatchAsync(long id, UpdateProductDto productDto)
+        public async Task PatchAsync(long id, UpdateProductDto productDto, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - PatchAsync - Attempting to patch product with ID: {id}");
             if (id == 0)
@@ -114,38 +114,39 @@ namespace FakeStoreDBAPI.Host.Services
             if (productDto.Price == 0)
                 throw new InvalidResourceException("Product price cannot be zero!");
 
-            var productToPatch = await _context.Products.FindAsync(id);
+            var productToPatch = await _context.Products.FindAsync(new object[] { id }, cancellationToken);
             if (productToPatch == null || !productToPatch.IsActive)
                 throw new NotFoundException($"Product with ID: {id} was not found");
 
             _mapper.Map(productDto, productToPatch);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
             _logger.LogDebug($"{_className} - PatchAsync - Patched product with ID: {id}");
 
         }
-        public async Task DeleteAsync(long id)
+        
+        public async Task DeleteAsync(long id, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - DeleteAsync - Attempting to deactivate product with ID: {id}");
             if (id == 0)
                 throw new InvalidIdException($"Product ID cannot be zero!");
 
-            var productToDelete = await _context.Products.FindAsync(id);
+            var productToDelete = await _context.Products.FindAsync(new object[] { id }, cancellationToken);
             if (productToDelete == null || !productToDelete.IsActive)
                 throw new NotFoundException($"Product with ID: {id} was not found");
 
             productToDelete.IsActive = false;
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
             _logger.LogDebug($"{_className} - DeleteAsync - Successfully deactivated product with ID: {id}");
         }
 
-        public async Task ProductExistsAsync(long id)
+        public async Task ProductExistsAsync(long id, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - ProductExistsAsync - Checking if product with ID: {id} exists");
             if (id == 0)
                 throw new InvalidIdException("Product ID cannot be zero!");
 
             bool productExists = false;
-            productExists = await _context.Products.AnyAsync(p => p.Id == id && p.IsActive);
+            productExists = await _context.Products.AnyAsync(p => p.Id == id && p.IsActive, cancellationToken);
             if (!productExists)
                 throw new NotFoundException($"Product with ID: {id} does not exists or is inactive");
 

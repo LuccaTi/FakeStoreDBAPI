@@ -4,13 +4,13 @@ namespace FakeStoreDBAPI.Host.Services.Interfaces
 {
     public interface ICustomerService
     {
-        public Task<IEnumerable<CustomerDto>> GetAllAsync();
-        public Task<CustomerDto?> GetByIdAsync(long id);
-        public Task<CustomerWithAddressDto?> GetByIdWithAddressAsync(long id);
-        public Task<CustomerDto?> LoginAsync(LoginRequestDto loginRequestDto); 
-        public Task<CustomerDto> PostAsync(CreateCustomerDto customerDto);
-        public Task PatchAsync(long id, UpdateCustomerDto customerDto);
-        public Task DeleteAsync(long id);
-        public Task CustomerExistsAsync(long id);
+        public Task<IEnumerable<CustomerDto>> GetAllAsync(CancellationToken cancellationToken);
+        public Task<CustomerDto?> GetByIdAsync(long id, CancellationToken cancellationToken);
+        public Task<CustomerWithAddressDto?> GetByIdWithAddressAsync(long id, CancellationToken cancellationToken);
+        public Task<CustomerDto?> LoginAsync(LoginRequestDto loginRequestDto, CancellationToken cancellationToken); 
+        public Task<CustomerDto> PostAsync(CreateCustomerDto customerDto, CancellationToken cancellationToken);
+        public Task PatchAsync(long id, UpdateCustomerDto customerDto, CancellationToken cancellationToken);
+        public Task DeleteAsync(long id, CancellationToken cancellationToken);
+        public Task CustomerExistsAsync(long id, CancellationToken cancellationToken);
     }
 }

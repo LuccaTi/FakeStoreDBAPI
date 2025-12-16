@@ -25,10 +25,10 @@ namespace FakeStoreDBAPI.Host.Services
         }
 
 
-        public async Task<IEnumerable<OrderDto>> GetAllAsync()
+        public async Task<IEnumerable<OrderDto>> GetAllAsync(CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetAllAsync - Attempting to obtain all order records");
-            var orders = await _context.Orders.Where(o => o.IsActive).ToListAsync();
+            var orders = await _context.Orders.Where(o => o.IsActive).ToListAsync(cancellationToken);
             if (orders.Count != 0)
             {
                 _logger.LogDebug($"{_className} - GetAllAsync - Records obtained: {orders.Count}");
@@ -41,11 +41,11 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<IEnumerable<OrderDto>>(orders);
         }
 
-        public async Task<OrderDto?> GetByGuidAsync(string orderGuid)
+        public async Task<OrderDto?> GetByGuidAsync(string orderGuid, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetByGuidAsync - Attempting to find order with GUID: '{orderGuid}'");
 
-            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderGuid == orderGuid, cancellationToken);
             if (order == null || !order.IsActive)
                 throw new NotFoundException($"Order with GUID: '{orderGuid}' was not found");
 
@@ -53,13 +53,13 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<OrderDto>(order);
         }
 
-        public async Task<OrderWithCustomerDto?> GetByGuidWithCustomerAsync(string orderGuid)
+        public async Task<OrderWithCustomerDto?> GetByGuidWithCustomerAsync(string orderGuid, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetByGuidWithCustomerAsync - Attempting to find order with GUID: '{orderGuid}' and return it with customer info");
 
             var order = await _context.Orders
                 .Include(o => o.Customer)
-                .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
+                .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid, cancellationToken);
             if (order == null || !order.IsActive)
                 throw new NotFoundException($"Order with GUID: '{orderGuid}' was not found");
 
@@ -67,12 +67,12 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<OrderWithCustomerDto>(order);
         }
 
-        public async Task<OrderWithOrderItemsDto?> GetByGuidWithOrderItemsAsync(string orderGuid)
+        public async Task<OrderWithOrderItemsDto?> GetByGuidWithOrderItemsAsync(string orderGuid, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetByGuidWithOrderItemsAsync - Attempting to find order with GUID: '{orderGuid}' and return it with it's itens");
             var order = await _context.Orders
                 .Include(o => o.OrderProducts)
-                .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
+                .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid, cancellationToken);
 
             if (order == null || !order.IsActive)
                 throw new NotFoundException($"Order with GUID: '{orderGuid}' was not found");
@@ -81,44 +81,44 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<OrderWithOrderItemsDto>(order);
         }
 
-        public async Task<OrderDto> PostAsync(CreateOrderDto orderDto)
+        public async Task<OrderDto> PostAsync(CreateOrderDto orderDto, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - PostAsync - Attempting to post order");
             var order = _mapper.Map<Order>(orderDto);
 
-            await _customerService.CustomerExistsAsync(orderDto.CustomerId);
+            await _customerService.CustomerExistsAsync(orderDto.CustomerId, cancellationToken);
 
             var orderExists = false;
-            orderExists = await _context.Orders.AnyAsync(o => o.OrderGuid == orderDto.OrderGuid && o.IsActive);
+            orderExists = await _context.Orders.AnyAsync(o => o.OrderGuid == orderDto.OrderGuid && o.IsActive, cancellationToken);
             if (orderExists)
                 throw new ConflictException($"Order with GUID: '{orderDto.OrderGuid}' already exists");
 
             if (orderDto.OrderItems == null || orderDto.OrderItems.Count == 0)
                 throw new InvalidResourceException($"Order list of products is empty!");
 
-            await ValidateOrderItens(orderDto.OrderItems, order.OrderGuid!);
+            await ValidateOrderItens(orderDto.OrderItems, order.OrderGuid!, cancellationToken);
             foreach (var item in orderDto.OrderItems)
             {
                 var orderProduct = _mapper.Map<OrderProduct>(item);
                 order.OrderProducts.Add(orderProduct);
             }
 
-            await ValidatePrices(order);
+            await ValidatePrices(order, cancellationToken);
 
             _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             var postedOrder = _mapper.Map<OrderDto>(order);
             _logger.LogDebug($"{_className} - PostAsync - Posted order with GUID: '{postedOrder.OrderGuid}'");
             return postedOrder;
         }
 
-        public async Task PatchAsync(string orderGuid, UpdateOrderDto orderDto)
+        public async Task PatchAsync(string orderGuid, UpdateOrderDto orderDto, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - PatchAsync - Attempting to patch order with GUID: '{orderGuid}'");
             var orderToUpdate = await _context.Orders
                 .Include(o => o.OrderProducts.Where(op => op.IsActive))
-                .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
+                .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid, cancellationToken);
 
             if (orderToUpdate == null || !orderToUpdate.IsActive)
                 throw new NotFoundException($"Order with GUID '{orderGuid}' was not found");
@@ -136,7 +136,7 @@ namespace FakeStoreDBAPI.Host.Services
                 if (orderDto.CustomerId.Value == 0)
                     throw new InvalidIdException("Customer ID cannot be zero");
 
-                await _customerService.CustomerExistsAsync(orderDto.CustomerId.Value);
+                await _customerService.CustomerExistsAsync(orderDto.CustomerId.Value, cancellationToken);
 
                 orderToUpdate.CustomerId = orderDto.CustomerId.Value;
                 _logger.LogDebug($"{_className} - PatchAsync - Order GUID: '{orderGuid}' patched it's customer ID to: {orderDto.CustomerId.Value}");
@@ -148,7 +148,7 @@ namespace FakeStoreDBAPI.Host.Services
 
             if (orderDto.OrderItems != null && orderDto.OrderItems.Count != 0)
             {
-                await ValidateOrderItens(orderDto.OrderItems, orderGuid);
+                await ValidateOrderItens(orderDto.OrderItems, orderGuid, cancellationToken);
 
                 var existingItems = orderToUpdate.OrderProducts!.ToDictionary(op => op.ProductId);
                 var dtoItems = orderDto.OrderItems.ToDictionary(item => item.ProductId);
@@ -178,18 +178,18 @@ namespace FakeStoreDBAPI.Host.Services
                 }
             }
 
-            await ValidatePrices(orderToUpdate);
+            await ValidatePrices(orderToUpdate, cancellationToken);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
             _logger.LogDebug($"{_className} - PatchAsync - Patched order with GUID: '{orderGuid}'");
         }
 
-        public async Task DeleteAsync(string orderGuid)
+        public async Task DeleteAsync(string orderGuid, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - DeleteAsync - Attempting to deactive order with GUID: '{orderGuid}' and it's dependencies (ORDER_PRODUCT)");
             var orderToDelete = await _context.Orders
                 .Include(o => o.OrderProducts)
-                .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid);
+                .FirstOrDefaultAsync(o => o.OrderGuid == orderGuid, cancellationToken);
 
             if (orderToDelete == null || !orderToDelete.IsActive)
                 throw new NotFoundException($"Order GUID: {orderGuid} not found");
@@ -208,22 +208,22 @@ namespace FakeStoreDBAPI.Host.Services
             }
 
             orderToDelete.IsActive = false;
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
             _logger.LogDebug($"{_className} - DeleteAsync - Successfully deactivated order with GUID: '{orderGuid}'");
         }
 
-        public async Task OrderExistsAsync(string orderGuid)
+        public async Task OrderExistsAsync(string orderGuid, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - OrderExistsAsync - Checking if order with GUID: '{orderGuid}' exists and is active");
             bool orderExists = false;
-            orderExists = await _context.Orders.AnyAsync(o => o.OrderGuid == orderGuid && o.IsActive);
+            orderExists = await _context.Orders.AnyAsync(o => o.OrderGuid == orderGuid && o.IsActive, cancellationToken);
             if (!orderExists)
                 throw new NotFoundException($"Order with GUID: '{orderGuid}' does not exists or is inactive");
 
             _logger.LogDebug($"{_className} - OrderExistsAsync - Order exists and is active");
         }
 
-        public async Task ValidatePrices(Order order)
+        public async Task ValidatePrices(Order order, CancellationToken cancellationToken)
         {
             if (order.OrderProducts != null && order.OrderProducts.Count != 0)
             {
@@ -233,7 +233,7 @@ namespace FakeStoreDBAPI.Host.Services
 
                 var productsFromDb = await _context.Products
                     .Where(p => productIds.Contains(p.Id))
-                    .ToDictionaryAsync(p => p.Id);
+                    .ToDictionaryAsync(p => p.Id, cancellationToken);
 
                 decimal calculatedTotalPrice = 0.0M;
                 foreach (var item in order.OrderProducts)
@@ -263,13 +263,13 @@ namespace FakeStoreDBAPI.Host.Services
             }
         }
 
-        public async Task ValidateOrderItens(IEnumerable<CreateOrderItemDto> orderItens, string orderGuid)
+        public async Task ValidateOrderItens(IEnumerable<CreateOrderItemDto> orderItens, string orderGuid, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - ValidateOrderItens - Validating items from order with GUID: {orderGuid}");
             var productIds = orderItens.Select(p => p.ProductId);
             var productsFromDb = await _context.Products
                 .Where(p => productIds.Contains(p.Id))
-                .ToDictionaryAsync(p => p.Id);
+                .ToDictionaryAsync(p => p.Id, cancellationToken);
 
             foreach (var item in orderItens)
             {

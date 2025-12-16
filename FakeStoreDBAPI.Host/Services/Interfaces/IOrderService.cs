@@ -4,13 +4,13 @@ namespace FakeStoreDBAPI.Host.Services.Interfaces
 {
     public interface IOrderService
     {
-        public Task<IEnumerable<OrderDto>> GetAllAsync();
-        public Task<OrderDto?> GetByGuidAsync(string orderGuid);
-        public Task<OrderWithCustomerDto?> GetByGuidWithCustomerAsync(string orderGuid);
-        public Task<OrderWithOrderItemsDto?> GetByGuidWithOrderItemsAsync(string orderGuid);
-        public Task<OrderDto> PostAsync(CreateOrderDto orderDto);
-        public Task PatchAsync(string orderGuid, UpdateOrderDto orderDto);
-        public Task DeleteAsync(string orderGuid);
-        public Task OrderExistsAsync(string orderGuid);
+        public Task<IEnumerable<OrderDto>> GetAllAsync(CancellationToken cancellationToken);
+        public Task<OrderDto?> GetByGuidAsync(string orderGuid, CancellationToken cancellationToken);
+        public Task<OrderWithCustomerDto?> GetByGuidWithCustomerAsync(string orderGuid, CancellationToken cancellationToken);
+        public Task<OrderWithOrderItemsDto?> GetByGuidWithOrderItemsAsync(string orderGuid, CancellationToken cancellationToken);
+        public Task<OrderDto> PostAsync(CreateOrderDto orderDto, CancellationToken cancellationToken);
+        public Task PatchAsync(string orderGuid, UpdateOrderDto orderDto, CancellationToken cancellationToken);
+        public Task DeleteAsync(string orderGuid, CancellationToken cancellationToken);
+        public Task OrderExistsAsync(string orderGuid, CancellationToken cancellationToken);
     }
 }

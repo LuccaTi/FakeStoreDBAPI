@@ -16,58 +16,58 @@ namespace FakeStoreDBAPI.Host.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
         {
-            var customers = await _customerService.GetAllAsync();
+            var customers = await _customerService.GetAllAsync(cancellationToken);
             return Ok(customers);
         }
 
         [HttpGet("{id}", Name = "GetCustomerById")]
-        public async Task<IActionResult> GetByIdAsync([FromRoute] long id)
+        public async Task<IActionResult> GetByIdAsync([FromRoute] long id, CancellationToken cancellationToken)
         {
-            var customer = await _customerService.GetByIdAsync(id);
+            var customer = await _customerService.GetByIdAsync(id, cancellationToken);
             return Ok(customer);
         }
 
         [HttpGet("{id}/with-address")]
-        public async Task<IActionResult> GetByIdWithAddressAsync([FromRoute] long id)
+        public async Task<IActionResult> GetByIdWithAddressAsync([FromRoute] long id, CancellationToken cancellationToken)
         {
-            var customer = await _customerService.GetByIdWithAddressAsync(id);
+            var customer = await _customerService.GetByIdWithAddressAsync(id, cancellationToken);
             return Ok(customer);
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> LoginAsync([FromBody] LoginRequestDto loginRequestDto)
+        public async Task<IActionResult> LoginAsync([FromBody] LoginRequestDto loginRequestDto, CancellationToken cancellationToken)
         {
-            var customer = await _customerService.LoginAsync(loginRequestDto);
+            var customer = await _customerService.LoginAsync(loginRequestDto, cancellationToken);
             return Ok(customer);
         }
 
         [HttpHead("{id}/customer-exists")]
-        public async Task<IActionResult> ExistsAsync([FromRoute] long id)
+        public async Task<IActionResult> ExistsAsync([FromRoute] long id, CancellationToken cancellationToken)
         {
-            await _customerService.CustomerExistsAsync(id);
+            await _customerService.CustomerExistsAsync(id, cancellationToken);
             return NoContent();
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostAsync([FromBody] CreateCustomerDto customerDto)
+        public async Task<IActionResult> PostAsync([FromBody] CreateCustomerDto customerDto, CancellationToken cancellationToken)
         {
-            var createdCustomer = await _customerService.PostAsync(customerDto);
+            var createdCustomer = await _customerService.PostAsync(customerDto, cancellationToken);
             return CreatedAtRoute("GetCustomerById", new { id = createdCustomer.Id }, createdCustomer);
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchAsync([FromRoute] long id, [FromBody] UpdateCustomerDto customerDto)
+        public async Task<IActionResult> PatchAsync([FromRoute] long id, [FromBody] UpdateCustomerDto customerDto, CancellationToken cancellationToken)
         {
-            await _customerService.PatchAsync(id, customerDto);
+            await _customerService.PatchAsync(id, customerDto, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAsync([FromRoute] long id)
+        public async Task<IActionResult> DeleteAsync([FromRoute] long id, CancellationToken cancellationToken)
         {
-            await _customerService.DeleteAsync(id);
+            await _customerService.DeleteAsync(id, cancellationToken);
             return NoContent();
         }
     }

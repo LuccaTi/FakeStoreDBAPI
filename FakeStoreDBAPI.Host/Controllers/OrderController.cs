@@ -16,58 +16,58 @@ namespace FakeStoreDBAPI.Host.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
         {
-            var orders = await _orderService.GetAllAsync();
+            var orders = await _orderService.GetAllAsync(cancellationToken);
             return Ok(orders);
         }
 
         [HttpGet("{orderGuid}", Name = "GetOrderByGuid")]
-        public async Task<IActionResult> GetByGuidAsync([FromRoute] string orderGuid)
+        public async Task<IActionResult> GetByGuidAsync([FromRoute] string orderGuid, CancellationToken cancellationToken)
         {
-            var order = await _orderService.GetByGuidAsync(orderGuid);
+            var order = await _orderService.GetByGuidAsync(orderGuid, cancellationToken);
             return Ok(order);
         }
 
         [HttpGet("{orderGuid}/with-customer")]
-        public async Task<IActionResult> GetByGuidWithCustomerAsync([FromRoute] string orderGuid)
+        public async Task<IActionResult> GetByGuidWithCustomerAsync([FromRoute] string orderGuid, CancellationToken cancellationToken)
         {
-            var order = await _orderService.GetByGuidWithCustomerAsync(orderGuid);
+            var order = await _orderService.GetByGuidWithCustomerAsync(orderGuid, cancellationToken);
             return Ok(order);
         }
 
         [HttpGet("{orderGuid}/with-order-itens")]
-        public async Task<IActionResult> GetByGuidWithOrderItensAsync([FromRoute] string orderGuid)
+        public async Task<IActionResult> GetByGuidWithOrderItensAsync([FromRoute] string orderGuid, CancellationToken cancellationToken)
         {
-            var order = await _orderService.GetByGuidWithOrderItemsAsync(orderGuid);
+            var order = await _orderService.GetByGuidWithOrderItemsAsync(orderGuid, cancellationToken);
             return Ok(order);
         }
 
         [HttpHead("{orderGuid}/order-exists")]
-        public async Task<IActionResult> ExistsAsync([FromRoute] string orderGuid)
+        public async Task<IActionResult> ExistsAsync([FromRoute] string orderGuid, CancellationToken cancellationToken)
         {
-            await _orderService.OrderExistsAsync(orderGuid);
+            await _orderService.OrderExistsAsync(orderGuid, cancellationToken);
             return NoContent();
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostAsync([FromBody] CreateOrderDto orderDto)
+        public async Task<IActionResult> PostAsync([FromBody] CreateOrderDto orderDto, CancellationToken cancellationToken)
         {
-            var createdOrder = await _orderService.PostAsync(orderDto);
+            var createdOrder = await _orderService.PostAsync(orderDto, cancellationToken);
             return CreatedAtRoute("GetOrderByGuid", new { orderGuid = createdOrder.OrderGuid }, createdOrder);
         }
 
         [HttpPatch("{orderGuid}")]
-        public async Task<IActionResult> PatchAsync([FromRoute] string orderGuid, [FromBody] UpdateOrderDto orderDto)
+        public async Task<IActionResult> PatchAsync([FromRoute] string orderGuid, [FromBody] UpdateOrderDto orderDto, CancellationToken cancellationToken)
         {
-            await _orderService.PatchAsync(orderGuid, orderDto);
+            await _orderService.PatchAsync(orderGuid, orderDto, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{orderGuid}")]
-        public async Task<IActionResult> DeleteAsync([FromRoute] string orderGuid)
+        public async Task<IActionResult> DeleteAsync([FromRoute] string orderGuid, CancellationToken cancellationToken)
         {
-            await _orderService.DeleteAsync(orderGuid);
+            await _orderService.DeleteAsync(orderGuid, cancellationToken);
             return NoContent();
         }
     }

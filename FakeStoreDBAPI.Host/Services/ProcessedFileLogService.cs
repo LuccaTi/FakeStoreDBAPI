@@ -24,10 +24,10 @@ namespace FakeStoreDBAPI.Host.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<ProcessedFileLogDto>> GetAllAsync()
+        public async Task<IEnumerable<ProcessedFileLogDto>> GetAllAsync(CancellationToken cancellationToken)
         {
             _logger.LogDebug($"Attempting to obtain all processed file log records...");
-            var processedFileLogs = await _context.ProcessedFileLogs.ToListAsync();
+            var processedFileLogs = await _context.ProcessedFileLogs.ToListAsync(cancellationToken);
 
             if (processedFileLogs.Count != 0)
             {
@@ -41,13 +41,13 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<IEnumerable<ProcessedFileLogDto>>(processedFileLogs);
         }
 
-        public async Task<ProcessedFileLogDto?> GetByIdAsync(long id)
+        public async Task<ProcessedFileLogDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetByIdAsync - Attempting to find processed file log with ID: {id}");
             if (id == 0)
                 throw new InvalidIdException($"Processed file log  ID cannot be zero!");
 
-            var processedFileLog = await _context.ProcessedFileLogs.FindAsync(id);
+            var processedFileLog = await _context.ProcessedFileLogs.FindAsync(new object[] { id }, cancellationToken);
             if (processedFileLog == null)
                 throw new NotFoundException($"Processed file log  ID with ID: {id} was not found!");
 
@@ -55,13 +55,13 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<ProcessedFileLogDto>(processedFileLog);
         }
 
-        public async Task<ProcessedFileLogDto?> GetByFileNameAsync(string fileName)
+        public async Task<ProcessedFileLogDto?> GetByFileNameAsync(string fileName, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetByFileNameAsync - Attempting to obtain processed file log with filename: {fileName}");
             if (string.IsNullOrEmpty(fileName))
                 throw new InvalidResourceException("Filename provided cannot be null or empty!");
 
-            var processedFileLog = await _context.ProcessedFileLogs.FirstOrDefaultAsync(p => p.FileName == fileName);
+            var processedFileLog = await _context.ProcessedFileLogs.FirstOrDefaultAsync(p => p.FileName == fileName, cancellationToken);
             if (processedFileLog == null)
                 throw new NotFoundException($"Resource with name: {fileName} was not found!");
 
@@ -69,7 +69,7 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<ProcessedFileLogDto>(processedFileLog);
         }
 
-        public async Task<ProcessedFileLogDto> PostAsync(CreateProcessedFileLogDto processedFileLogDto)
+        public async Task<ProcessedFileLogDto> PostAsync(CreateProcessedFileLogDto processedFileLogDto, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - PostAsync - Attempting to post processed file log with filename: {processedFileLogDto.FileName}");
             if (string.IsNullOrEmpty(processedFileLogDto.FileName))
@@ -77,26 +77,26 @@ namespace FakeStoreDBAPI.Host.Services
 
             var processedFileToPost = _mapper.Map<ProcessedFileLog>(processedFileLogDto);
             _context.ProcessedFileLogs.Add(processedFileToPost);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             var postedProcessedFile = _mapper.Map<ProcessedFileLogDto>(processedFileToPost);
             _logger.LogDebug($"{_className} - PostAsync - Posted processed file with ID: {postedProcessedFile.Id}");
             return postedProcessedFile;
         }
 
-        public async Task PatchAsync(UpdateProcessedFileLogDto processedFileLogDto, long id)
+        public async Task PatchAsync(UpdateProcessedFileLogDto processedFileLogDto, long id, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - PatchAsync - Attempting to patch customer with ID: {id}");
             if (string.IsNullOrEmpty(processedFileLogDto.FileName))
                 throw new InvalidResourceException("Processed file log filename cannot be null or empty!");
 
-            var processedFileToUpdate = await _context.ProcessedFileLogs.FindAsync(id);
+            var processedFileToUpdate = await _context.ProcessedFileLogs.FindAsync(new object[] { id }, cancellationToken);
             if (processedFileToUpdate == null)
                 throw new NotFoundException($"Processed file log with ID: {id} was not found!");
 
             _mapper.Map(processedFileLogDto, processedFileToUpdate);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
             _logger.LogDebug($"{_className} - PatchAsync - Patched processed file log with ID: {id}");
         }
     }
