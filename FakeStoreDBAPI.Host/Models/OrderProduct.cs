@@ -13,7 +13,9 @@ namespace FakeStoreDBAPI.Host.Models
         public long OrderId { get; set; }
         [ForeignKey(nameof(Product))]
         public long ProductId { get; set; }
+        [Required]
         public int Quantity { get; set; }
+        [Required]
         [Precision(18,2)]
         public decimal TotalPrice { get; set; }
         public bool IsActive { get; set; } = true;

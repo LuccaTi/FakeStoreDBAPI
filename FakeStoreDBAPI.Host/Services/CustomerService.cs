@@ -72,18 +72,28 @@ namespace FakeStoreDBAPI.Host.Services
         public async Task<CustomerDto?> LoginAsync(LoginRequestDto loginRequestDto, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - LoginAsync - Attempting to obtain customer by using username: '{loginRequestDto.Username}' and it's password");
-            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserName == loginRequestDto.Username && c.Password == loginRequestDto.Password && c.IsActive, cancellationToken);
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserName == loginRequestDto.Username && c.IsActive, cancellationToken);
             if (customer == null)
                 throw new NotFoundException($"Customer with username: '{loginRequestDto.Username}' was not found!");
 
-            _logger.LogDebug($"{_className} - LoginAsync - Found customer with username: '{loginRequestDto.Username}'");
-            return _mapper.Map<CustomerDto>(customer);
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginRequestDto.Password, customer.Password);
+            if (isPasswordValid)
+            {
+                _logger.LogDebug($"{_className} - LoginAsync - Found customer with username: '{loginRequestDto.Username}'");
+                return _mapper.Map<CustomerDto>(customer);
+            }
+            else
+            {
+                _logger.LogWarning($"{_className} - LoginAsync - Authentication failed for user: '{loginRequestDto.Username}'");
+                throw new InvalidResourceException($"Invalid username or password!");
+            }
         }
 
         public async Task<CustomerDto> PostAsync(CreateCustomerDto customerDto, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - PostAsync - Attempting to post customer");
             var customer = _mapper.Map<Customer>(customerDto);
+            customer.Password = BCrypt.Net.BCrypt.HashPassword(customerDto.Password);
 
             await _addressService.AddressExistsAsync(customerDto.AddressId, cancellationToken);
 
