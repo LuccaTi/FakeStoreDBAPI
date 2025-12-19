@@ -50,8 +50,7 @@ namespace FakeStoreDBAPI.Host.Services
             _logger.LogDebug($"{_className} - GetAllDayBeforeAsync - Filtering orders between {startOfYesterday:yyyy-MM-dd HH:mm:ss} and {startOfToday:yyyy-MM-dd HH:mm:ss}");
 
             var orders = await _context.Orders
-                .Where(o => o.IsActive &&
-                            o.OrderDate >= startOfYesterday &&
+                .Where(o => o.OrderDate >= startOfYesterday &&
                             o.OrderDate < startOfToday)
                 .ToListAsync(cancellationToken);
 
