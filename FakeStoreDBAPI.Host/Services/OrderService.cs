@@ -41,6 +41,32 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<IEnumerable<OrderDto>>(orders);
         }
 
+        public async Task<IEnumerable<OrderDto>> GetAllDayBeforeAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogDebug($"{_className} - GetAllDayBeforeAsync - Attempting to obtain all order records from the previous calendar day");
+            var startOfToday = DateTime.UtcNow.Date;
+            var startOfYesterday = startOfToday.AddDays(-1);
+
+            _logger.LogDebug($"{_className} - GetAllDayBeforeAsync - Filtering orders between {startOfYesterday:yyyy-MM-dd HH:mm:ss} and {startOfToday:yyyy-MM-dd HH:mm:ss}");
+
+            var orders = await _context.Orders
+                .Where(o => o.IsActive &&
+                            o.OrderDate >= startOfYesterday &&
+                            o.OrderDate < startOfToday)
+                .ToListAsync(cancellationToken);
+
+            if (orders.Count != 0)
+            {
+                _logger.LogDebug($"{_className} - GetAllDayBeforeAsync - Records obtained: {orders.Count}");
+            }
+            else
+            {
+                _logger.LogWarning($"{_className} - GetAllDayBeforeAsync - List of records is empty");
+            }
+
+            return _mapper.Map<IEnumerable<OrderDto>>(orders);
+        }
+
         public async Task<OrderDto?> GetByGuidAsync(string orderGuid, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetByGuidAsync - Attempting to find order with GUID: '{orderGuid}'");

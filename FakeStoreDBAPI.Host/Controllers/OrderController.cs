@@ -22,6 +22,13 @@ namespace FakeStoreDBAPI.Host.Controllers
             return Ok(orders);
         }
 
+        [HttpGet("day-before")]
+        public async Task<IActionResult> GetAllDayBeforeAsync(CancellationToken cancellationToken)
+        {
+            var orders = await _orderService.GetAllDayBeforeAsync(cancellationToken);
+            return Ok(orders);
+        }
+
         [HttpGet("{orderGuid}", Name = "GetOrderByGuid")]
         public async Task<IActionResult> GetByGuidAsync([FromRoute] string orderGuid, CancellationToken cancellationToken)
         {
