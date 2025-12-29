@@ -41,6 +41,20 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<IEnumerable<OrderDto>>(orders);
         }
 
+        public async Task<OrderDto> GetByIdAsync(long id, CancellationToken cancellationToken)
+        {
+            _logger.LogDebug($"{_className} - GetByIdAsync - Attempting to find order with ID: {id}");
+            if (id == 0)
+                throw new InvalidIdException($"Order ID cannot be zero!");
+
+            var order = await _context.Orders.FindAsync(new object[] { id }, cancellationToken);
+            if (order == null)
+                throw new NotFoundException($"Order with ID: {id} was not found!");
+
+            _logger.LogDebug($"{_className} - GetByIdAsync - Found order with ID: {id}");
+            return _mapper.Map<OrderDto>(order);
+        }
+
         public async Task<IEnumerable<OrderDto>> GetAllDayBeforeAsync(CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetAllDayBeforeAsync - Attempting to obtain all order records from the previous calendar day");
@@ -81,7 +95,7 @@ namespace FakeStoreDBAPI.Host.Services
 
             return _mapper.Map<IEnumerable<OrderDto>>(orders);
         }
-        
+
         public async Task<OrderDto?> GetByGuidAsync(string orderGuid, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetByGuidAsync - Attempting to find order with GUID: '{orderGuid}'");
