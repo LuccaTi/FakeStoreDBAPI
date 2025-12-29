@@ -66,6 +66,22 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<IEnumerable<OrderDto>>(orders);
         }
 
+        public async Task<IEnumerable<OrderDto>> GetAllActiveOrNotAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogDebug($"{_className} - GetAllActiveOrNotAsync - Attempting to obtain all order records including the inactives");
+            var orders = await _context.Orders.ToListAsync(cancellationToken);
+            if (orders.Count != 0)
+            {
+                _logger.LogDebug($"{_className} - GetAllActiveOrNotAsync - Records obtained: {orders.Count}");
+            }
+            else
+            {
+                _logger.LogWarning($"{_className} - GetAllActiveOrNotAsync - List of records is empty");
+            }
+
+            return _mapper.Map<IEnumerable<OrderDto>>(orders);
+        }
+        
         public async Task<OrderDto?> GetByGuidAsync(string orderGuid, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetByGuidAsync - Attempting to find order with GUID: '{orderGuid}'");
