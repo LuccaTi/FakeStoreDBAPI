@@ -35,6 +35,19 @@ namespace FakeStoreDBAPI.Host
             {
                 var builder = WebApplication.CreateBuilder(args);
 
+                string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+                builder.Services.AddCors(options =>
+                {
+                    options.AddPolicy(name: MyAllowSpecificOrigins,
+                        policy =>
+                        {
+                            policy.WithOrigins("http://localhost:5173")
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                        });
+                });
+
                 Log.Information("Configuring builder");
                 builder.Host.UseSerilog();
 
@@ -84,6 +97,7 @@ namespace FakeStoreDBAPI.Host
                 app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 
                 app.UseHttpsRedirection();
+                app.UseCors(MyAllowSpecificOrigins);
                 app.UseAuthorization();
                 app.MapControllers();
                 #endregion
