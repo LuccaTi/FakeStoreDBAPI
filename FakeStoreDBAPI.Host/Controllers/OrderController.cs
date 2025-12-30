@@ -57,10 +57,17 @@ namespace FakeStoreDBAPI.Host.Controllers
             return Ok(order);
         }
 
-        [HttpGet("{orderGuid}/with-order-itens")]
+        [HttpGet("{orderGuid}/with-order-items")]
         public async Task<IActionResult> GetByGuidWithOrderItensAsync([FromRoute] string orderGuid, CancellationToken cancellationToken)
         {
             var order = await _orderService.GetByGuidWithOrderItemsAsync(orderGuid, cancellationToken);
+            return Ok(order);
+        }
+
+        [HttpGet("{id:long}/with-order-items")]
+        public async Task<IActionResult> GetByIdWithOrderItemsAsync([FromRoute] long id, CancellationToken cancellationToken)
+        {
+            var order = await _orderService.GetByIdWithOrderItemsAsync(id, cancellationToken);
             return Ok(order);
         }
 

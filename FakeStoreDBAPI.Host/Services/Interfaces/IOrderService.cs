@@ -11,6 +11,7 @@ namespace FakeStoreDBAPI.Host.Services.Interfaces
         public Task<OrderDto?> GetByGuidAsync(string orderGuid, CancellationToken cancellationToken);
         public Task<OrderWithCustomerDto?> GetByGuidWithCustomerAsync(string orderGuid, CancellationToken cancellationToken);
         public Task<OrderWithOrderItemsDto?> GetByGuidWithOrderItemsAsync(string orderGuid, CancellationToken cancellationToken);
+        public Task<OrderWithOrderItemsDto?> GetByIdWithOrderItemsAsync(long id, CancellationToken cancellationToken);
         public Task<OrderDto> PostAsync(CreateOrderDto orderDto, CancellationToken cancellationToken);
         public Task PatchAsync(string orderGuid, UpdateOrderDto orderDto, CancellationToken cancellationToken);
         public Task DeleteAsync(string orderGuid, CancellationToken cancellationToken);

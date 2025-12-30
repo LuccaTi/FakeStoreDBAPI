@@ -136,6 +136,23 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<OrderWithOrderItemsDto>(order);
         }
 
+        public async Task<OrderWithOrderItemsDto?> GetByIdWithOrderItemsAsync(long id, CancellationToken cancellationToken)
+        {
+            _logger.LogDebug($"{_className} - GetByIdWithOrderItemsAsync - Attempting to obtain order with ID: {id} and it's items");
+            if (id == 0)
+                throw new InvalidIdException("Order ID cannot be zero!");
+
+            var order = await _context.Orders
+                .Include(o => o.OrderProducts)
+                .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+
+            if (order == null)
+                throw new NotFoundException($"Order with ID: {id} was not found");
+
+            _logger.LogDebug($"{_className} - GetByIdWithOrderItemsAsync - Found order with ID: {id}");
+            return _mapper.Map<OrderWithOrderItemsDto>(order);
+        }
+
         public async Task<OrderDto> PostAsync(CreateOrderDto orderDto, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - PostAsync - Attempting to post order");
