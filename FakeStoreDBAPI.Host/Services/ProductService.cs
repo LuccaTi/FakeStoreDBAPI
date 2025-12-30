@@ -60,7 +60,7 @@ namespace FakeStoreDBAPI.Host.Services
                 throw new InvalidIdException("Product with ID cannot be zero!");
 
             var product = await _context.Products.FindAsync(new object[] { id }, cancellationToken);
-            if (product == null || !product.IsActive)
+            if (product == null)
                 throw new NotFoundException($"Product with ID: {id} was not found!");
 
             _logger.LogDebug($"{_className} - GetByIdAsync - Found product with ID: {id}");

@@ -62,7 +62,7 @@ namespace FakeStoreDBAPI.Host.Services
                 throw new InvalidIdException($"Customer ID cannot be zero!");
 
             var customer = await _context.Customers.FindAsync(new object[] { id }, cancellationToken);
-            if (customer == null || !customer.IsActive)
+            if (customer == null)
                 throw new NotFoundException($"Customer with ID: {id} was not found!");
 
             _logger.LogDebug($"{_className} - GetByIdAsync - Found customer with ID: {id}");

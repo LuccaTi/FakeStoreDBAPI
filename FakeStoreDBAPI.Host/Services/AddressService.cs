@@ -45,7 +45,7 @@ namespace FakeStoreDBAPI.Host.Services
                 throw new InvalidIdException($"Address ID cannot be zero!");
 
             var address = await _context.Addresses.FindAsync(new object[] { id }, cancellationToken);
-            if (address == null || !address.IsActive)
+            if (address == null)
                 throw new NotFoundException($"Address with ID: {id} was not found");
 
             _logger.LogDebug($"{_className} - GetByIdAsync - Found address with ID: {id}");

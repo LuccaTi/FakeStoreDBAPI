@@ -101,7 +101,7 @@ namespace FakeStoreDBAPI.Host.Services
             _logger.LogDebug($"{_className} - GetByGuidAsync - Attempting to find order with GUID: '{orderGuid}'");
 
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderGuid == orderGuid, cancellationToken);
-            if (order == null || !order.IsActive)
+            if (order == null)
                 throw new NotFoundException($"Order with GUID: '{orderGuid}' was not found");
 
             _logger.LogDebug($"{_className} - GetByGuidAsync - Found order with GUID: '{orderGuid}'");
