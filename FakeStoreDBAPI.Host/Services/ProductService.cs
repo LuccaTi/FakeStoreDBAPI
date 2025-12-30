@@ -38,6 +38,21 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<IEnumerable<ProductDto>>(products);
         }
 
+        public async Task<IEnumerable<ProductDto>> GetAllActiveOrNotAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogDebug($"{_className} - GetAllActiveOrNotAsync - Attempting to obtain all product records including the inactives");
+            var products = await _context.Products.ToListAsync(cancellationToken);
+            if (products.Count != 0)
+            {
+                _logger.LogDebug($"{_className} - GetAllActiveOrNotAsync - Records obtained: {products.Count}");
+            }
+            else
+            {
+                _logger.LogWarning($"{_className} - GetAllActiveOrNotAsync - List of records is empty!");
+            }
+            return _mapper.Map<IEnumerable<ProductDto>>(products);
+        }
+
         public async Task<ProductDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetByIdAsync - Attempting to find product with ID: {id}");
@@ -71,7 +86,7 @@ namespace FakeStoreDBAPI.Host.Services
 
             var productToPost = _mapper.Map<Product>(productDto);
 
-            bool productExists = await _context.Products.AnyAsync(p => p.Title == productToPost.Title && p.Description == productToPost.Description && p.Category == productToPost.Category);
+            bool productExists = await _context.Products.AnyAsync(p => p.IsActive && p.Title == productToPost.Title && p.Description == productToPost.Description && p.Category == productToPost.Category);
             if (productExists)
                 throw new ConflictException($"Product with title: '{productToPost.Title}', description: '{productToPost.Description}' and category: '{productToPost.Category}' already posted!");
 

@@ -24,6 +24,13 @@ namespace FakeStoreDBAPI.Host.Controllers
             return Ok(products);
         }
 
+        [HttpGet("active-or-not")]
+        public async Task<IActionResult> GetAllActiveOrNotAsync(CancellationToken cancellationToken)
+        {
+            var products = await _productService.GetAllActiveOrNotAsync(cancellationToken);
+            return Ok(products);
+        }
+
         [HttpGet("{id}", Name = "GetProductById")]
         public async Task<IActionResult> GetByIdAsync([FromRoute] long id, CancellationToken cancellationToken)
         {

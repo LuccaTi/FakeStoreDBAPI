@@ -111,7 +111,7 @@ namespace FakeStoreDBAPI.Host.Services
             var customer = _mapper.Map<Customer>(customerDto);
             customer.Password = BCrypt.Net.BCrypt.HashPassword(customerDto.Password);
 
-            bool customerExists = await _context.Customers.AnyAsync(c => c.UserName == customer.UserName);
+            bool customerExists = await _context.Customers.AnyAsync(c => c.IsActive && c.UserName == customer.UserName);
             if (customerExists)
                 throw new ConflictException($"Customer with username: '{customer.UserName}' already posted!");
 

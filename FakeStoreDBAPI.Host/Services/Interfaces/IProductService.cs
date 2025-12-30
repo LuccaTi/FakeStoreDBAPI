@@ -5,6 +5,7 @@ namespace FakeStoreDBAPI.Host.Services.Interfaces
     public interface IProductService
     {
         public Task<IEnumerable<ProductDto>> GetAllAsync(CancellationToken cancellationToken);
+        public Task<IEnumerable<ProductDto>> GetAllActiveOrNotAsync(CancellationToken cancellationToken);
         public Task<ProductDto?> GetByIdAsync(long id, CancellationToken cancellationToken);
         public Task<ProductDto?> GetByTitleDescriptionAsync(TitleDescriptionDto titleDescriptionDto, CancellationToken cancellationToken);
         public Task<ProductDto> PostAsync(CreateProductDto productDto, CancellationToken cancellationToken);
