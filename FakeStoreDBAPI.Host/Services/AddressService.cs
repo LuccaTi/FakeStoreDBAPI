@@ -67,6 +67,11 @@ namespace FakeStoreDBAPI.Host.Services
         {
             _logger.LogDebug($"{_className} - PostAsync - Attempting to post address");
             var address = _mapper.Map<Address>(addressDto);
+
+            bool addressExists = await _context.Addresses.AnyAsync(a => a.City == address.City && a.Street == address.Street && a.Number == address.Number);
+            if (addressExists)
+                throw new ConflictException($"Address in city: '{address.City}' with street: '{address.Street}' and number: {address.Number} already posted!");
+
             _context.Addresses.Add(address);
             await _context.SaveChangesAsync(cancellationToken);
 

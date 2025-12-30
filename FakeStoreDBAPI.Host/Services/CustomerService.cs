@@ -39,6 +39,22 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<IEnumerable<CustomerDto>>(customers);
         }
 
+        public async Task<IEnumerable<CustomerDto>> GetAllActiveOrNotAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogDebug($"{_className} - GetAllActiveOrNotAsync - Attempting to obtain all customer records including the inactives");
+            var customers = await _context.Customers.ToListAsync(cancellationToken);
+            if (customers.Count != 0)
+            {
+                _logger.LogDebug($"{_className} - GetAllActiveOrNotAsync - Records obtained: {customers.Count}");
+            }
+            else
+            {
+                _logger.LogWarning($"{_className} - GetAllActiveOrNotAsync - List of records is empty");
+            }
+
+            return _mapper.Map<IEnumerable<CustomerDto>>(customers);
+        }
+
         public async Task<CustomerDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - GetByIdAsync - Attempting to find customer with ID: {id}");
@@ -62,7 +78,7 @@ namespace FakeStoreDBAPI.Host.Services
             var customer = await _context.Customers
                 .Include(c => c.Address)
                 .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-            if (customer == null || !customer.IsActive)
+            if (customer == null)
                 throw new NotFoundException($"Customer with ID: {id} was not found!");
 
             _logger.LogDebug($"{_className} - GetByIdWithAddressAsync - Found customer with ID: {id}");
@@ -94,6 +110,10 @@ namespace FakeStoreDBAPI.Host.Services
             _logger.LogDebug($"{_className} - PostAsync - Attempting to post customer");
             var customer = _mapper.Map<Customer>(customerDto);
             customer.Password = BCrypt.Net.BCrypt.HashPassword(customerDto.Password);
+
+            bool customerExists = await _context.Customers.AnyAsync(c => c.UserName == customer.UserName);
+            if (customerExists)
+                throw new ConflictException($"Customer with username: '{customer.UserName}' already posted!");
 
             await _addressService.AddressExistsAsync(customerDto.AddressId, cancellationToken);
 

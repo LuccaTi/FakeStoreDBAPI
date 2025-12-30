@@ -70,6 +70,11 @@ namespace FakeStoreDBAPI.Host.Services
                 throw new InvalidResourceException($"Product price must be higher than zero!");
 
             var productToPost = _mapper.Map<Product>(productDto);
+
+            bool productExists = await _context.Products.AnyAsync(p => p.Title == productToPost.Title && p.Description == productToPost.Description && p.Category == productToPost.Category);
+            if (productExists)
+                throw new ConflictException($"Product with title: '{productToPost.Title}', description: '{productToPost.Description}' and category: '{productToPost.Category}' already posted!");
+
             _context.Products.Add(productToPost);
             await _context.SaveChangesAsync(cancellationToken);
 

@@ -76,6 +76,11 @@ namespace FakeStoreDBAPI.Host.Services
                 throw new InvalidResourceException("Filename provided cannot be null or empty!");
 
             var processedFileToPost = _mapper.Map<ProcessedFileLog>(processedFileLogDto);
+            
+            bool fileExists = await _context.ProcessedFileLogs.AnyAsync(f => f.FileName == processedFileToPost.FileName);
+            if (fileExists)
+                throw new ConflictException($"File with filename: '{processedFileToPost.FileName}' already posted!");
+
             _context.ProcessedFileLogs.Add(processedFileToPost);
             await _context.SaveChangesAsync(cancellationToken);
 
