@@ -5,6 +5,7 @@ namespace FakeStoreDBAPI.Host.Services.Interfaces
     public interface IOrderService
     {
         public Task<IEnumerable<OrderDto>> GetAllAsync(CancellationToken cancellationToken);
+        public Task<IEnumerable<OrderDto>> GetAllCancelledAsync(CancellationToken cancellationToken);
         public Task<OrderDto> GetByIdAsync(long id, CancellationToken cancellationToken);
         public Task<IEnumerable<OrderDto>> GetAllDayBeforeAsync(CancellationToken cancellationToken);
         public Task<IEnumerable<OrderDto>> GetAllActiveOrNotAsync(CancellationToken cancellationToken);

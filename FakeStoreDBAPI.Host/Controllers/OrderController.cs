@@ -22,6 +22,13 @@ namespace FakeStoreDBAPI.Host.Controllers
             return Ok(orders);
         }
 
+        [HttpGet("cancelled")]
+        public async Task<IActionResult> GetAllCancelledAsync(CancellationToken cancellationToken)
+        {
+            var orders = await _orderService.GetAllCancelledAsync(cancellationToken);
+            return Ok(orders);
+        }
+
         [HttpGet("{id:long}")]
         public async Task<IActionResult> GetByIdAsync([FromRoute] long id, CancellationToken cancellationToken)
         {
