@@ -85,6 +85,19 @@ namespace FakeStoreDBAPI.Host.Services
             return _mapper.Map<CustomerWithAddressDto>(customer);
         }
 
+        public async Task<CustomerWithOrdersDto?> GetByIdWithOrdersAsync(long id, CancellationToken cancellationToken)
+        {
+            _logger.LogDebug($"{_className} - GetByIdWithOrdersAsync - Attempting to find customer with ID: {id} and return it with all the orders it ");
+            var customer = await _context.Customers
+                .Include(c => c.CustomerOrders)
+                .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+
+            if (customer == null)
+                throw new NotFoundException($"Customer with ID: {id} was not found");
+
+            _logger.LogDebug($"{_className} - GetByIdWithOrdersAsync - Found customer with ID: {id}");
+            return _mapper.Map<CustomerWithOrdersDto>(customer);
+        }
         public async Task<CustomerDto?> LoginAsync(LoginRequestDto loginRequestDto, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"{_className} - LoginAsync - Attempting to obtain customer by using username: '{loginRequestDto.Username}' and it's password");

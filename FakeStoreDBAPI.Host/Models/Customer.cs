@@ -31,5 +31,11 @@ namespace FakeStoreDBAPI.Host.Models
         public DateTime DateUpdate { get; set; }
 
         public Address? Address { get; set; }
+
+        public virtual ICollection<Order> CustomerOrders { get; set; }
+        public Customer()
+        {
+            CustomerOrders = new HashSet<Order>();
+        }
     }
 }

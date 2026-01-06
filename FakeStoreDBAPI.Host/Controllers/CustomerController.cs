@@ -43,6 +43,13 @@ namespace FakeStoreDBAPI.Host.Controllers
             return Ok(customer);
         }
 
+        [HttpGet("{id}/with-orders")]
+        public async Task<IActionResult> GetByIdWithOrdersAsync([FromRoute] long id, CancellationToken cancellationToken)
+        {
+            var customer = await _customerService.GetByIdWithOrdersAsync(id, cancellationToken);
+            return Ok(customer);
+        }
+        
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginRequestDto loginRequestDto, CancellationToken cancellationToken)
         {

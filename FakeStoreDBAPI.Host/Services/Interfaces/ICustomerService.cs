@@ -8,6 +8,7 @@ namespace FakeStoreDBAPI.Host.Services.Interfaces
         public Task<IEnumerable<CustomerDto>> GetAllActiveOrNotAsync(CancellationToken cancellationToken);
         public Task<CustomerDto?> GetByIdAsync(long id, CancellationToken cancellationToken);
         public Task<CustomerWithAddressDto?> GetByIdWithAddressAsync(long id, CancellationToken cancellationToken);
+        public Task<CustomerWithOrdersDto?> GetByIdWithOrdersAsync(long id, CancellationToken cancellationToken);
         public Task<CustomerDto?> LoginAsync(LoginRequestDto loginRequestDto, CancellationToken cancellationToken); 
         public Task<CustomerDto> PostAsync(CreateCustomerDto customerDto, CancellationToken cancellationToken);
         public Task PatchAsync(long id, UpdateCustomerDto customerDto, CancellationToken cancellationToken);

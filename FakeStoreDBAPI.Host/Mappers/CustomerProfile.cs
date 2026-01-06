@@ -14,6 +14,9 @@ namespace FakeStoreDBAPI.Host.Mappers
 
             CreateMap<UpdateCustomerDto, Customer>()
                 .ForAllMembers(options => options.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<Customer, CustomerWithOrdersDto>()
+                .ForMember(dest => dest.CustomerOrders, opt => opt.MapFrom(src => src.CustomerOrders));
         }
     }
 }

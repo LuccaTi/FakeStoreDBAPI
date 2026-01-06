@@ -37,8 +37,8 @@ namespace FakeStoreDBAPI.Host.Models
         public DateTime DateUpdate { get; set; }
 
         public Customer? Customer { get; set; }
-        public virtual ICollection<OrderProduct> OrderProducts { get; set; }
 
+        public virtual ICollection<OrderProduct> OrderProducts { get; set; }
         public Order()
         {
             OrderProducts = new HashSet<OrderProduct>();
